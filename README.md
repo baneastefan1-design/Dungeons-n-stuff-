@@ -23,6 +23,22 @@ Open `dist/Dungeon Escape.app` to play without installing Python or Pygame. Its 
 
 You can also double-click `run_mac.command` in Finder. It opens the packaged app when present, or runs the local development version when `.venv` exists.
 
+## One-Line Install and Run
+
+These commands install the game for the current user, create a reusable launcher, and start it. They require internet access and Python 3; the first run also downloads Pygame.
+
+macOS or Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/baneastefan1-design/Dungeons-n-stuff-/main/install.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/baneastefan1-design/Dungeons-n-stuff-/main/install.ps1 | iex
+```
+
 ### Linux
 
 Run `bash build_linux.sh` on a Linux machine to create `dist/DungeonEscape`, a standalone executable. Its statistics are saved in `~/.local/share/Dungeon Escape/dungeon_stats.json` (or `$XDG_DATA_HOME` when set). It must be built on Linux because native application bundles cannot be cross-compiled from macOS.
