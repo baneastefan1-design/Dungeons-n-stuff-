@@ -13,3 +13,6 @@ dist/
 
 # Platform files
 .DS_Store
+
+# Local Codex workspace guidance
+AGENTS.md
