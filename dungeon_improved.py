@@ -608,7 +608,7 @@ def main() -> None:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-                elif event.key == pygame.K_r:
+                elif event.key == pygame.K_r and state.status != "playing":
                     state = restart_game()
                 elif event.key in key_moves:
                     attempt_move(state, key_moves[event.key], statistics)

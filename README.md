@@ -21,6 +21,8 @@ Or run it directly:
 
 Open `dist/Dungeon Escape.app` to play without installing Python or Pygame. Its lifetime statistics are stored in `~/Library/Application Support/Dungeon Escape/dungeon_stats.json`.
 
+You can also double-click `run_mac.command` in Finder. It opens the packaged app when present, or runs the local development version when `.venv` exists.
+
 ### Linux
 
 Run `bash build_linux.sh` on a Linux machine to create `dist/DungeonEscape`, a standalone executable. Its statistics are saved in `~/.local/share/Dungeon Escape/dungeon_stats.json` (or `$XDG_DATA_HOME` when set). It must be built on Linux because native application bundles cannot be cross-compiled from macOS.
@@ -42,7 +44,7 @@ python3 -m venv .venv
 | --- | --- |
 | Move | Arrow keys or `W` `A` `S` `D` |
 | Move on touch devices | Swipe |
-| Restart | `R` |
+| Restart after a completed run | `R` |
 | Quit | `Esc` |
 
 ## How to Play
