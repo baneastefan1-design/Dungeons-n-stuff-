@@ -36,8 +36,6 @@ AUDIO_RATE = 44_100
 
 def statistics_file() -> Path:
     """Choose a writable stats location both in development and in the app."""
-    if saved_path := os.environ.get("DUNGEON_STATS_FILE"):
-        return Path(saved_path)
     if getattr(sys, "frozen", False):
         if sys.platform == "darwin":
             data_directory = Path.home() / "Library" / "Application Support"
