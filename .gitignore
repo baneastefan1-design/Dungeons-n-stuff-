@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Local game data
+dungeon_stats.json
+
+# PyInstaller output
+build/
+dist/
+*.spec
+
+# Platform files
+.DS_Store
