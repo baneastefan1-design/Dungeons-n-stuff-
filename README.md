@@ -1,28 +1,6 @@
 # Dungeon Escape
 
 A compact Pygame dungeon crawler. Find the treasure, avoid the dragon, and return to the blue portal—or retreat through it once the dragon wakes.
-
-## Run the Game
-
-The project uses a local virtual environment and `pygame-ce`.
-
-```bash
-source .venv/bin/activate
-python dungeon_improved.py
-```
-
-Or run it directly:
-
-```bash
-.venv/bin/python dungeon_improved.py
-```
-
-## Standalone macOS App
-
-Open `dist/Dungeon Escape.app` to play without installing Python or Pygame. Its lifetime statistics are stored in `~/Library/Application Support/Dungeon Escape/dungeon_stats.json`.
-
-You can also double-click `run_mac.command` in Finder. It opens the packaged app when present, or runs the local development version when `.venv` exists.
-
 ## One-Line Install and Run
 
 These commands install the game for the current user, create a reusable launcher, and start it. They require internet access and Python 3; the first run also downloads Pygame.
@@ -39,6 +17,13 @@ Windows PowerShell:
 irm https://raw.githubusercontent.com/baneastefan1-design/Dungeons-n-stuff-/main/install.ps1 | iex
 ```
 
+### macOS
+
+Open `dist/Dungeon Escape.app` to play without installing Python or Pygame. Its lifetime statistics are stored in `~/Library/Application Support/Dungeon Escape/dungeon_stats.json`.
+
+You can also double-click `run_mac.command` in Finder. It opens the packaged app when present, or runs the local development version when `.venv` exists.
+
+
 ### Linux
 
 Run `bash build_linux.sh` on a Linux machine to create `dist/DungeonEscape`, a standalone executable. Its statistics are saved in `~/.local/share/Dungeon Escape/dungeon_stats.json` (or `$XDG_DATA_HOME` when set). It must be built on Linux because native application bundles cannot be cross-compiled from macOS.
@@ -46,6 +31,21 @@ Run `bash build_linux.sh` on a Linux machine to create `dist/DungeonEscape`, a s
 ### Windows
 
 Run `build_windows.bat` on a Windows machine to create `dist\DungeonEscape.exe`, a standalone game executable. Its statistics are saved in `%APPDATA%\Dungeon Escape\dungeon_stats.json`. It must be built on Windows because `.exe` files cannot be cross-compiled from macOS.
+
+## Run the Game
+
+The project uses a local virtual environment and `pygame-ce`.
+
+```bash
+source .venv/bin/activate
+python dungeon_improved.py
+```
+
+Or run it directly:
+
+```bash
+.venv/bin/python dungeon_improved.py
+```
 
 If you need to recreate the environment:
 
