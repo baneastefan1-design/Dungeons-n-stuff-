@@ -11,8 +11,20 @@ if ! command -v python3 >/dev/null 2>&1; then
     exit 1
 fi
 
-mkdir -p "$INSTALL_DIR" "$BIN_DIR"
-curl -fsSL "$REPOSITORY/dungeon_improved.py" -o "$INSTALL_DIR/dungeon_improved.py"
+mkdir -p "$INSTALL_DIR/assets" "$BIN_DIR"
+for module in dungeon_improved.py game.py pathfinding.py rendering.py asset_manager.py; do
+    curl -fsSL "$REPOSITORY/$module" -o "$INSTALL_DIR/$module"
+done
+curl -fsSL "$REPOSITORY/assets/start_screen.png" -o "$INSTALL_DIR/assets/start_screen.png"
+for asset in \
+    hero/idle.png hero/walk.png \
+    dragon/sleeping.png dragon/awake.png dragon/phantom.png \
+    tiles/floor_1.png tiles/floor_2.png \
+    tiles/wall_horizontal.png tiles/wall_vertical.png \
+    portal.png treasure_open.png scorch.png fog.png; do
+    mkdir -p "$INSTALL_DIR/assets/illustrated/$(dirname "$asset")"
+    curl -fsSL "$REPOSITORY/assets/illustrated/$asset" -o "$INSTALL_DIR/assets/illustrated/$asset"
+done
 python3 -m venv "$INSTALL_DIR/.venv"
 "$INSTALL_DIR/.venv/bin/python" -m pip install --quiet --disable-pip-version-check pygame-ce
 

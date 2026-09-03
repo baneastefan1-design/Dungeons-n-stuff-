@@ -1,0 +1,23 @@
+[tools]
+python = "3.14"
+
+[env]
+_.python.venv = { path = ".venv", create = true }
+
+[tasks.setup]
+description = "Install the game's Python dependencies"
+run = "python -m pip install --upgrade pip pygame-ce"
+
+[tasks.run]
+description = "Launch Dungeon Escape"
+depends = ["setup"]
+run = "python dungeon_improved.py"
+
+[tasks.run-debug]
+description = "Launch the game with the full map visible"
+depends = ["setup"]
+run = "python dungeon_improved.py -d"
+
+[tasks.check]
+description = "Check all game modules for syntax errors"
+run = "python -m py_compile dungeon_improved.py game.py pathfinding.py rendering.py asset_manager.py"

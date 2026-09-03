@@ -1,6 +1,17 @@
 # Dungeon Escape
 
 A compact Pygame dungeon crawler. Find the treasure, avoid the dragon, and return to the blue portal—or retreat through it once the dragon wakes.
+
+The code is split by responsibility:
+
+- `dungeon_improved.py` handles the CLI and Pygame event loop.
+- `game.py` contains game state, rules, map generation, and movement.
+- `pathfinding.py` contains the reusable A* implementation.
+- `rendering.py` draws the game without changing its state.
+- `asset_manager.py` selects visual themes and lazily loads optional artwork.
+- `assets/start_screen.png` provides the illustrated mode-selection backdrop.
+- `assets/illustrated/` contains the small-screen gameplay theme: hero, dragons, portal, open treasure, floors, walls, scorch, and fog.
+
 ## One-Line Install and Run
 
 These commands install the game for the current user, create a reusable launcher, and start it. They require internet access and Python 3; the first run also downloads Pygame.
@@ -47,6 +58,16 @@ Or run it directly:
 .venv/bin/python dungeon_improved.py
 ```
 
+To reveal the full map, including all walls and the sleeping dragon, while testing dragon movement, run:
+
+```bash
+.venv/bin/python dungeon_improved.py -d
+```
+
+Choose **Normal** or **Hard** from the start screen. Hard mode gives the dragon full knowledge of the walls while Normal mode makes it discover walls through collisions. Both use A* pathfinding.
+
+Debug mode is available only through the `-d` console option. It overlays a translucent phantom dragon running the opposite difficulty, marked `H` for hard or `N` for normal, so their routes can be compared on the same map.
+
 If you need to recreate the environment:
 
 ```bash
@@ -66,6 +87,7 @@ python3 -m venv .venv
 ## How to Play
 
 - Start at the blue portal in the top-left corner.
+- The illustrated art style is selected by default; Classic remains available from the start screen.
 - Explore the random 8×8 dungeon to find the treasure chest.
 - Return to the portal with the treasure to win.
 - Once the dragon wakes, you may return to the portal without the treasure for a safe retreat.
@@ -75,7 +97,7 @@ python3 -m venv .venv
 - Walls are hidden until you try to walk into them. The treasure always has a reachable route from the portal.
 - Tiles you enter stay lit; unexplored distant tiles remain under fog.
 - The dragon wakes when you enter its danger radius. It is visible through fog when awake and leaves scorched tiles behind.
-- The dragon obeys walls. It can move diagonally only across a fully clear corner.
+- The dragon uses A* pathfinding, discovers walls by bumping into them, remembers them while chasing, and immediately reroutes without losing its move. It can move diagonally only across a fully clear corner.
 - Collecting the chest plays an opening animation, marks its location with an X, and makes the portal glow gold.
 - The game plays generated sound effects for movement, walls, treasure, the dragon, wins, and losses.
 - When a run ends, the entire map and every wall are revealed.
@@ -85,5 +107,5 @@ python3 -m venv .venv
 ## Development Check
 
 ```bash
-.venv/bin/python -m py_compile dungeon_improved.py
+.venv/bin/python -m py_compile dungeon_improved.py game.py pathfinding.py rendering.py asset_manager.py
 ```
