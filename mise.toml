@@ -6,7 +6,9 @@ _.python.venv = { path = ".venv", create = true }
 
 [tasks.setup]
 description = "Install the game's Python dependencies"
-run = "python -m pip install --upgrade pip pygame-ce"
+# Some Python distributions create a venv without pip.  Bootstrap it before
+# installing dependencies so `mise run run` works from a fresh environment.
+run = "python -m ensurepip --upgrade && python -m pip install --upgrade pip pygame-ce"
 
 [tasks.run]
 description = "Launch Dungeon Escape"
