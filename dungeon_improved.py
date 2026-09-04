@@ -20,6 +20,16 @@ from rendering import (
 )
 
 
+def set_window_icon() -> None:
+    """Use the bundled Dungeon Escape artwork for development windows."""
+    try:
+        icon = pygame.image.load(str(game.resource_path("assets/dungeon_escape_icon.png")))
+        pygame.display.set_icon(icon)
+    except pygame.error:
+        # The game remains playable if an optional image asset is unavailable.
+        pass
+
+
 def make_phantom(state: game.GameState) -> game.GameState:
     """Create the opposite-mode dragon used for debug comparisons."""
     phantom = deepcopy(state)
@@ -54,6 +64,7 @@ def main(debug: bool = False) -> None:
 
     statistics = game.load_statistics()
     game.configure_difficulty(statistics)
+    set_window_icon()
     screen = pygame.display.set_mode((game.WIDTH, game.HEIGHT))
     pygame.display.set_caption("Dungeon Escape")
     clock = pygame.time.Clock()

@@ -32,6 +32,8 @@ irm https://raw.githubusercontent.com/baneastefan1-design/Dungeons-n-stuff-/main
 
 Open `dist/Dungeon Escape.app` to play without installing Python or Pygame. Its lifetime statistics are stored in `~/Library/Application Support/Dungeon Escape/dungeon_stats.json`.
 
+Run `bash build_macos.sh` on a Mac to build the app bundle. The bundle and development window use the included Dungeon Escape icon.
+
 You can also double-click `run_mac.command` in Finder. It opens the packaged app when present, or runs the local development version when `.venv` exists.
 
 
