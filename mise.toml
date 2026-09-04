@@ -22,4 +22,8 @@ run = "python dungeon_improved.py -d"
 
 [tasks.check]
 description = "Check all game modules for syntax errors"
-run = "python -m py_compile dungeon_improved.py game.py pathfinding.py rendering.py asset_manager.py"
+run = "python -m py_compile dungeon_improved.py main.py game.py pathfinding.py rendering.py asset_manager.py"
+
+[tasks.web-build]
+description = "Package the browser edition with Pygbag"
+run = "python -m pip install -r requirements-web.txt && python -m pygbag --build --title 'Dungeon Escape' ."

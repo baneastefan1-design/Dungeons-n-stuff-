@@ -1,0 +1,5 @@
+services:
+  dungeon-escape:
+    build: .
+    ports:
+      - "8080:80"

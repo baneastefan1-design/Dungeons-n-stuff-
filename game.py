@@ -41,6 +41,10 @@ def resource_path(relative_path: str) -> Path:
 
 def statistics_file() -> Path:
     """Choose a writable stats location both in development and in the app."""
+    if sys.platform == "emscripten":
+        # Pygbag maps /data to browser-backed storage, keeping web statistics
+        # separate from the read-only game bundle.
+        return Path("/data/dungeon-escape/dungeon_stats.json")
     if getattr(sys, "frozen", False):
         if sys.platform == "darwin":
             data_directory = Path.home() / "Library" / "Application Support"

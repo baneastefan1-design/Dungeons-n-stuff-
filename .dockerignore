@@ -1,0 +1,8 @@
+.git
+.venv
+.pytest_cache
+__pycache__
+build
+dist
+dungeon_stats.json
+assets/illustrated_detailed

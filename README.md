@@ -45,6 +45,16 @@ Run `bash build_linux.sh` on a Linux machine to create `dist/DungeonEscape`, a s
 
 Run `build_windows.bat` on a Windows machine to create `dist\DungeonEscape.exe`, a standalone game executable. Its statistics are saved in `%APPDATA%\Dungeon Escape\dungeon_stats.json`. It must be built on Windows because `.exe` files cannot be cross-compiled from macOS.
 
+### Browser / Docker (2.0)
+
+Build and host the WebAssembly edition with Docker:
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:8080` on a computer or phone on the same network (replace `localhost` with the host computer's LAN address for a phone). The browser edition supports keyboard controls and touch swipes. Audio begins after the player interacts with the page, as required by mobile browsers.
+
 ## Run the Game
 
 The project uses a local virtual environment and `pygame-ce`.

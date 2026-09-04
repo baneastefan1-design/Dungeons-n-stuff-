@@ -5,6 +5,7 @@ Controls: arrow keys/WASD or swipe. Press R to restart and Esc to quit.
 """
 
 import argparse
+import asyncio
 from copy import deepcopy
 
 import pygame
@@ -54,7 +55,7 @@ def advance_phantom(phantom: game.GameState, player: game.Position) -> None:
         game.dragon_step(phantom)
 
 
-def main(debug: bool = False) -> None:
+async def main(debug: bool = False) -> None:
     pygame.mixer.pre_init(game.AUDIO_RATE, -16, 1, 512)
     pygame.init()
     try:
@@ -186,6 +187,8 @@ def main(debug: bool = False) -> None:
             )
         pygame.display.flip()
         clock.tick(game.FPS)
+        # Browser builds must yield to the WebAssembly event loop each frame.
+        await asyncio.sleep(0)
 
     pygame.quit()
 
@@ -203,4 +206,4 @@ def parse_args() -> argparse.Namespace:
 
 if __name__ == "__main__":
     arguments = parse_args()
-    main(debug=arguments.debug)
+    asyncio.run(main(debug=arguments.debug))
