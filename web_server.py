@@ -15,7 +15,6 @@ from fastapi.staticfiles import StaticFiles
 
 import game
 
-
 ROOT = Path(__file__).parent
 DATABASE = ROOT / "data" / "dungeon_escape.sqlite3"
 app = FastAPI(title="Dungeon Escape")
@@ -32,8 +31,7 @@ def database() -> sqlite3.Connection:
 
 def initialise_database() -> None:
     with database() as connection:
-        connection.execute(
-            """
+        connection.execute("""
             CREATE TABLE IF NOT EXISTS players (
                 username TEXT PRIMARY KEY COLLATE NOCASE,
                 wins INTEGER NOT NULL DEFAULT 0,
@@ -45,18 +43,15 @@ def initialise_database() -> None:
                 highest_win_streak INTEGER NOT NULL DEFAULT 0,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-            """
-        )
-        connection.execute(
-            """
+            """)
+        connection.execute("""
             CREATE TABLE IF NOT EXISTS client_profiles (
                 client_id TEXT PRIMARY KEY,
                 username TEXT NOT NULL,
                 change_day TEXT NOT NULL,
                 change_count INTEGER NOT NULL DEFAULT 0
             )
-            """
-        )
+            """)
 
 
 def player_name(value: object) -> str | None:
@@ -103,10 +98,14 @@ def allow_username(username: str, client_id: str) -> bool:
 
 def load_player(username: str) -> game.Statistics:
     with database() as connection:
-        row = connection.execute("SELECT * FROM players WHERE username = ?", (username,)).fetchone()
+        row = connection.execute(
+            "SELECT * FROM players WHERE username = ?", (username,)
+        ).fetchone()
     if row is None:
         return game.Statistics()
-    return game.Statistics(**{field: row[field] for field in game.Statistics.__dataclass_fields__})
+    return game.Statistics(
+        **{field: row[field] for field in game.Statistics.__dataclass_fields__}
+    )
 
 
 def save_player(username: str, statistics: game.Statistics) -> None:
@@ -145,7 +144,9 @@ def serialise(
     phantom: game.GameState | None = None,
 ) -> dict[str, Any]:
     """Return only rendering data; all decisions remain in game.py."""
-    distance = max(abs(state.player[0] - state.dragon[0]), abs(state.player[1] - state.dragon[1]))
+    distance = max(
+        abs(state.player[0] - state.dragon[0]), abs(state.player[1] - state.dragon[1])
+    )
     if state.status == "eaten":
         hint = "DEVOURED · The dragon wins."
     elif state.status == "won":
@@ -170,8 +171,16 @@ def serialise(
         "treasure": position(state.treasure),
         "dragon": position(state.dragon),
         "visited": [position(value) for value in state.visited],
-        "horizontal_walls": walls(state.horizontal_walls if debug or state.status != "playing" else state.discovered_h),
-        "vertical_walls": walls(state.vertical_walls if debug or state.status != "playing" else state.discovered_v),
+        "horizontal_walls": walls(
+            state.horizontal_walls
+            if debug or state.status != "playing"
+            else state.discovered_h
+        ),
+        "vertical_walls": walls(
+            state.vertical_walls
+            if debug or state.status != "playing"
+            else state.discovered_v
+        ),
         "scorched": [position(value) for value in state.scorched],
         "moves": state.moves,
         "has_treasure": state.has_treasure,
@@ -191,26 +200,30 @@ def serialise(
 
 @app.get("/")
 async def index() -> FileResponse:
-    return FileResponse(ROOT / "web" / "index.html")
+    return FileResponse(
+        ROOT / "web" / "index.html",
+        headers={"Cache-Control": "no-store, max-age=0"},
+    )
 
 
 @app.get("/debug")
 async def debug_index() -> FileResponse:
     """Serve the debug client; debug-only controls are enabled by its URL."""
-    return FileResponse(ROOT / "web" / "index.html")
+    return FileResponse(
+        ROOT / "web" / "index.html",
+        headers={"Cache-Control": "no-store, max-age=0"},
+    )
 
 
 @app.get("/api/leaderboard")
 async def leaderboard() -> JSONResponse:
     with database() as connection:
-        rows = connection.execute(
-            """
+        rows = connection.execute("""
             SELECT username, wins, dragon_wins, escapes, best_win_moves, highest_win_streak
             FROM players
             ORDER BY wins DESC, highest_win_streak DESC, best_win_moves IS NULL, best_win_moves ASC, username COLLATE NOCASE
             LIMIT 50
-            """
-        ).fetchall()
+            """).fetchall()
     return JSONResponse({"players": [dict(row) for row in rows]})
 
 
@@ -231,14 +244,20 @@ async def game_socket(websocket: WebSocket) -> None:
                 selected_name = player_name(message.get("username"))
                 client_id = client_identifier(message.get("client_id"))
                 if selected_name is None or (not debug_mode and client_id is None):
-                    await websocket.send_json({"error": "Enter a username between 1 and 24 characters."})
+                    await websocket.send_json(
+                        {"error": "Enter a username between 1 and 24 characters."}
+                    )
                     continue
                 if not debug_mode and not allow_username(selected_name, client_id):
-                    await websocket.send_json({"error": "You can change username only twice per day."})
+                    await websocket.send_json(
+                        {"error": "You can change username only twice per day."}
+                    )
                     continue
                 if debug_mode:
                     requested_level = message.get("level", 1)
-                    if not isinstance(requested_level, int) or isinstance(requested_level, bool):
+                    if not isinstance(requested_level, int) or isinstance(
+                        requested_level, bool
+                    ):
                         requested_level = 1
                     requested_level = max(1, min(10, requested_level))
                     statistics = game.Statistics(
@@ -251,7 +270,8 @@ async def game_socket(websocket: WebSocket) -> None:
                     statistics = load_player(username)
                 game.configure_difficulty(statistics, max_grid_size=13)
                 state = game.make_game(
-                    hard_mode=message.get("difficulty") == "hard" or statistics.win_streak >= 9,
+                    hard_mode=message.get("difficulty") == "hard"
+                    or statistics.win_streak >= 9,
                     level=statistics.win_streak + 1,
                 )
                 phantom = make_phantom(state) if debug_mode else None
@@ -259,17 +279,27 @@ async def game_socket(websocket: WebSocket) -> None:
                 delta = moves.get(message.get("direction"))
                 if delta is not None:
                     previous_player = state.player
-                    game.attempt_move(state, delta, statistics, persist_statistics=not debug_mode)
+                    game.attempt_move(
+                        state, delta, statistics, persist_statistics=not debug_mode
+                    )
                     if phantom is not None and state.player != previous_player:
                         advance_phantom(phantom, state.player)
-                    if not debug_mode and state.status != "playing" and username is not None:
+                    if (
+                        not debug_mode
+                        and state.status != "playing"
+                        and username is not None
+                    ):
                         save_player(username, statistics)
             elif action == "restart" and state is not None:
                 game.configure_difficulty(statistics, max_grid_size=13)
-                state = game.make_game(hard_mode=state.hard_mode, level=statistics.win_streak + 1)
+                state = game.make_game(
+                    hard_mode=state.hard_mode, level=statistics.win_streak + 1
+                )
                 phantom = make_phantom(state) if debug_mode else None
             if state is not None:
-                await websocket.send_json(serialise(state, statistics, debug=debug_mode, phantom=phantom))
+                await websocket.send_json(
+                    serialise(state, statistics, debug=debug_mode, phantom=phantom)
+                )
     except WebSocketDisconnect:
         return
 
@@ -286,7 +316,9 @@ def make_phantom(state: game.GameState) -> game.GameState:
 def advance_phantom(phantom: game.GameState, player: game.Position) -> None:
     """Advance the debug comparison dragon without touching the real state."""
     phantom.player = player
-    distance = max(abs(player[0] - phantom.dragon[0]), abs(player[1] - phantom.dragon[1]))
+    distance = max(
+        abs(player[0] - phantom.dragon[0]), abs(player[1] - phantom.dragon[1])
+    )
     if not phantom.dragon_awake and distance <= game.WAKE_DISTANCE:
         phantom.dragon_awake = True
         phantom.scorched.add(phantom.dragon)
