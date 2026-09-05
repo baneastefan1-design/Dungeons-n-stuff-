@@ -25,6 +25,20 @@ def test_browser_fortification_keeps_growing_after_level_nine(monkeypatch):
     assert game.EXTRA_WALLS == 10
 
 
+def test_browser_fortification_caps_at_the_load_tested_level(monkeypatch):
+    monkeypatch.setattr(game, "GRID_SIZE", 8)
+    monkeypatch.setattr(game, "TILE_SIZE", 56)
+    monkeypatch.setattr(game, "WALL_COUNT", 12)
+    monkeypatch.setattr(game, "EXTRA_WALLS", 0)
+
+    game.configure_difficulty(game.Statistics(win_streak=53), max_grid_size=13)
+    safe_extra_walls = game.EXTRA_WALLS
+    game.configure_difficulty(game.Statistics(win_streak=99), max_grid_size=13)
+
+    assert safe_extra_walls == 54
+    assert game.EXTRA_WALLS == safe_extra_walls
+
+
 def test_fortified_dungeon_keeps_dragon_and_treasure_reachable(monkeypatch):
     monkeypatch.setattr(game, "GRID_SIZE", 8)
     monkeypatch.setattr(game, "WALL_COUNT", 12)

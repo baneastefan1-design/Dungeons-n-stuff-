@@ -163,7 +163,7 @@ def serialise(
         "grid_size": game.GRID_SIZE,
         "level": state.level,
         "next_level": statistics.win_streak + 1,
-        "fortification_level": max(0, state.level - 6),
+        "fortification_level": max(0, min(game.MAX_WEB_LEVEL, state.level) - 6),
         "forced_hard": state.level >= 10,
         "streak": statistics.win_streak,
         "player": position(state.player),
@@ -259,7 +259,13 @@ async def game_socket(websocket: WebSocket) -> None:
                         requested_level, bool
                     ):
                         requested_level = 1
-                    requested_level = max(1, min(99, requested_level))
+                    if not 1 <= requested_level <= game.MAX_WEB_LEVEL:
+                        await websocket.send_json(
+                            {
+                                "error": f"Debug levels range from 1 to {game.MAX_WEB_LEVEL}."
+                            }
+                        )
+                        continue
                     statistics = game.Statistics(
                         win_streak=requested_level - 1,
                         highest_win_streak=requested_level - 1,

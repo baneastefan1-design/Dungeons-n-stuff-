@@ -26,6 +26,7 @@ FPS = 60
 WALL_COUNT = 12
 EXTRA_WALLS = 0
 MAX_GRID_SIZE = 16
+MAX_WEB_LEVEL = 54
 MIN_TILE_SIZE = 42
 WAKE_DISTANCE = 3
 SWIPE_THRESHOLD = 28
@@ -229,7 +230,7 @@ def configure_difficulty(
     if max_grid_size is None:
         EXTRA_WALLS = 0
     else:
-        level = statistics.win_streak + 1
+        level = min(MAX_WEB_LEVEL, statistics.win_streak + 1)
         EXTRA_WALLS = 3 * max(0, min(level, 9) - 6) + max(0, level - 9)
 
 
