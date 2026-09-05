@@ -26,7 +26,8 @@
     for(let y=0;y<state.grid_size;y++) for(let x=0;x<state.grid_size;x++) sprite(`tiles/floor_${(x+y)%2+1}`,left+x*tile,top+y*tile,tile);
     for(const [x,y] of state.scorched) sprite('scorch',left+x*tile,top+y*tile,tile);
     sprite('portal',left+state.start[0]*tile,top+state.start[1]*tile,tile);
-    if ((state.status !== 'playing' || has(state.visited,...state.treasure)) && !state.has_treasure) sprite('treasure_open',left+state.treasure[0]*tile,top+state.treasure[1]*tile,tile);
+    const treasureVisible = state.status !== 'playing' || has(state.visited,...state.treasure) || Math.max(Math.abs(state.treasure[0]-state.player[0]),Math.abs(state.treasure[1]-state.player[1])) <= 2;
+    if (treasureVisible && !state.has_treasure) sprite('treasure_open',left+state.treasure[0]*tile,top+state.treasure[1]*tile,tile);
     if (state.dragon_awake || state.status !== 'playing') sprite(state.dragon_awake?'dragon/awake':'dragon/sleeping',left+state.dragon[0]*tile,top+state.dragon[1]*tile,tile);
     for(let y=0;y<state.grid_size;y++) for(let x=0;x<state.grid_size;x++) { const seen=has(state.visited,x,y)||Math.max(Math.abs(x-state.player[0]),Math.abs(y-state.player[1]))<=2||state.status!=='playing'; if(!seen&&!(state.dragon_awake&&x===state.dragon[0]&&y===state.dragon[1])) sprite('fog',left+x*tile,top+y*tile,tile); }
     const thick=Math.max(5,tile*.18); for(const [x,y] of state.horizontal_walls) if(assets['tiles/wall_horizontal']) ctx.drawImage(assets['tiles/wall_horizontal'],left+x*tile,top+(y+1)*tile-thick/2,tile,thick); for(const [x,y] of state.vertical_walls) if(assets['tiles/wall_vertical']) ctx.drawImage(assets['tiles/wall_vertical'],left+(x+1)*tile-thick/2,top+y*tile,thick,tile);
