@@ -10,11 +10,12 @@
     <meta name="description" content="A touch-friendly dungeon escape game." />
     <link rel="icon" href="/static/favicon.png" />
     <link rel="manifest" href="/static/manifest.webmanifest" />
-    <link rel="stylesheet" href="/static/styles.css?v=20260905-6" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260905-7" />
     <link rel="stylesheet" href="/static/desktop-controls.css?v=20260905-2" />
     <link rel="stylesheet" href="/static/two-difficulties.css?v=20260905-2" />
     <link rel="stylesheet" href="/static/sound-controls.css?v=20260905-2" />
     <link rel="stylesheet" href="/static/player-profile.css?v=20260905-2" />
+    <link rel="stylesheet" href="/static/rules.css?v=20260905-1" />
     <title>Dungeon Escape</title>
   </head>
   <body>
@@ -30,6 +31,9 @@
           </button>
           <button id="leaderboard-toggle" class="quiet-button" type="button">
             Rankings
+          </button>
+          <button id="rules-toggle" class="quiet-button" type="button">
+            Rules
           </button>
           <button
             id="sound-toggle"
@@ -129,6 +133,27 @@
             </button>
           </div>
         </div>
+        <div id="rules" class="overlay" hidden>
+          <div class="dialog rules-dialog">
+            <p class="eyebrow">HOW TO PLAY</p>
+            <h2>Escape the dungeon</h2>
+            <div class="rules-copy">
+              <h3>Your objective</h3>
+              <p>Find the treasure chest, pick it up, then return to the blue portal. Returning without treasure is only a safe escape, not a treasure win.</p>
+              <h3>Move</h3>
+              <p>Use arrow keys, WASD, swipe on the board, or the touch controls. A move into a wall does not advance you.</p>
+              <h3>Dragon</h3>
+              <p>The dragon sleeps until you get close. Once awake it hunts every turn. If you reach the portal carrying treasure, the portal wins even if the dragon is on it.</p>
+              <h3>Difficulty</h3>
+              <p><strong>Normal:</strong> the dragon learns walls as it hunts. <strong>Hard:</strong> it knows every wall from the start.</p>
+              <h3>Levels</h3>
+              <p>Levels 1–6 grow from 8×8 to 13×13. Level 7 adds randomized walls and dead ends. At Level 10 the dragon gains Hard instincts. Wall density reaches its tested safe maximum at Level 54.</p>
+              <h3>Rankings</h3>
+              <p>Treasure wins, best move count, and streak are stored on the server. A dragon loss resets your next run to Level 1.</p>
+            </div>
+            <button id="rules-close" class="quiet-button" type="button">Back to game</button>
+          </div>
+        </div>
       </section>
       <section class="controls" aria-label="Movement controls">
         <button
@@ -168,6 +193,6 @@
         Choose a difficulty to begin.
       </p>
     </main>
-    <script src="/static/game.js?v=20260905-6"></script>
+    <script src="/static/game.js?v=20260905-7"></script>
   </body>
 </html>

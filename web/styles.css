@@ -219,7 +219,8 @@ canvas {
     touch-action: pan-y;
     margin: 0 auto;
   }
-  #menu.overlay:not([hidden]) {
+  #menu.overlay:not([hidden]),
+  #rules.overlay:not([hidden]) {
     position: fixed;
     inset: 0;
     z-index: 20;
@@ -228,7 +229,8 @@ canvas {
     padding: 16px;
     touch-action: pan-y;
   }
-  #menu .dialog {
+  #menu .dialog,
+  #rules .dialog {
     max-height: calc(100dvh - 32px);
     margin: 0 auto;
   }

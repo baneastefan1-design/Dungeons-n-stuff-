@@ -12,6 +12,8 @@
     usernameInput = document.querySelector("#username"),
     debugLevelField = document.querySelector("#debug-level-field"),
     debugLevelInput = document.querySelector("#debug-level"),
+    rules = document.querySelector("#rules"),
+    rulesButton = document.querySelector("#rules-toggle"),
     leaderboard = document.querySelector("#leaderboard"),
     leaderboardBody = document.querySelector("#leaderboard-body"),
     assets = {};
@@ -61,17 +63,20 @@
     localStorage.setItem("dungeon-escape-client-id", clientId);
   }
   usernameInput.value = localStorage.getItem("dungeon-escape-username") || "";
-  const menuHome = menu.parentElement;
+  const mobileOverlays = [menu, rules];
+  const overlayHomes = new Map(mobileOverlays.map((overlay) => [overlay, overlay.parentElement]));
   const compactMenu = matchMedia("(max-width: 600px)");
-  function placeMobileMenu() {
-    if (compactMenu.matches && menu.parentElement !== document.body) {
-      document.body.append(menu);
-    } else if (!compactMenu.matches && menu.parentElement !== menuHome) {
-      menuHome.append(menu);
+  function placeMobileOverlays() {
+    for (const overlay of mobileOverlays) {
+      if (compactMenu.matches && overlay.parentElement !== document.body) {
+        document.body.append(overlay);
+      } else if (!compactMenu.matches && overlay.parentElement !== overlayHomes.get(overlay)) {
+        overlayHomes.get(overlay).append(overlay);
+      }
     }
   }
-  placeMobileMenu();
-  compactMenu.addEventListener("change", placeMobileMenu);
+  placeMobileOverlays();
+  compactMenu.addEventListener("change", placeMobileOverlays);
   function setUsernameEditable(editable) {
     usernameInput.readOnly = !editable;
     usernameInput.setAttribute("aria-readonly", String(!editable));
@@ -595,6 +600,12 @@
     .addEventListener("click", showLeaderboard);
   document.querySelector("#leaderboard-close").addEventListener("click", () => {
     leaderboard.hidden = true;
+  });
+  rulesButton.addEventListener("click", () => {
+    rules.hidden = false;
+  });
+  document.querySelector("#rules-close").addEventListener("click", () => {
+    rules.hidden = true;
   });
   profileButton.addEventListener("click", () => {
     showMainMenu();
