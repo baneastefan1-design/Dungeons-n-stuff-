@@ -91,6 +91,7 @@ class Statistics:
     best_win_moves: int | None = None
     win_streak: int = 0
     highest_win_streak: int = 0
+    hearts: int = 3
 
 
 @dataclass
@@ -114,6 +115,10 @@ class GameState:
     scorched: set[Position] = field(default_factory=set)
     moves: int = 0
     has_treasure: bool = False
+    heart: Position | None = None
+    has_heart: bool = False
+    heart_banked: bool = False
+    life_spent: bool = False
     dragon_awake: bool = False
     status: str = "playing"
     flash: str = "Find the treasure and return to the portal."
@@ -142,6 +147,7 @@ def load_statistics() -> Statistics:
             highest_win_streak=max(
                 0, int(saved.get("highest_win_streak", saved.get("win_streak", 0)))
             ),
+            hearts=min(3, max(0, int(saved.get("hearts", 3)))),
         )
     except (OSError, ValueError, TypeError):
         return Statistics()
@@ -296,6 +302,15 @@ def eat_player(
     persist_statistics: bool = True,
 ) -> None:
     """End the run with matching sound and screen-shake feedback."""
+    if statistics is not None and statistics.hearts > 0:
+        statistics.hearts -= 1
+        state.life_spent = True
+        state.flash, state.flash_color = "A heart carries you back to the portal!", RED
+        record_result(state, statistics, "escaped", persist=persist_statistics)
+        return
+    if statistics is not None:
+        # A true defeat restarts the player at Level 1 with a full supply.
+        statistics.hearts = 3
     record_result(state, statistics, "eaten", persist=persist_statistics)
     state.shake_until = pygame.time.get_ticks() + 450
     play_sound("lose")
@@ -360,6 +375,7 @@ def make_game(
     grid_size: int | None = None,
     wall_count: int | None = None,
     extra_walls: int | None = None,
+    hearts: int = 3,
 ) -> GameState:
     """Generate a map whose treasure is reachable from the entrance."""
     while True:
@@ -419,6 +435,21 @@ def make_game(
         if reachable(state, state.start, state.treasure) and reachable(
             state, state.dragon, state.start
         ):
+            # A heart is a deliberate risk: it is placed precisely on the
+            # dragon's wake boundary, so reaching it wakes the dragon. It is
+            # only banked for the following run after a return to the portal.
+            if hearts < 3 and random.random() < 0.10:
+                heart_candidates = [
+                    (x, y)
+                    for x in range(state.grid_size)
+                    for y in range(state.grid_size)
+                    if (x, y) not in {state.start, state.treasure, state.dragon}
+                    and max(abs(x - state.dragon[0]), abs(y - state.dragon[1]))
+                    == WAKE_DISTANCE
+                    and reachable(state, state.start, (x, y))
+                ]
+                if heart_candidates:
+                    state.heart = random.choice(heart_candidates)
             return state
 
 
@@ -548,12 +579,23 @@ def attempt_move(
         )
         state.flash_until = pygame.time.get_ticks() + 1600
         state.treasure_open_until = pygame.time.get_ticks() + 700
+    if state.player == state.heart and not state.has_heart:
+        state.has_heart = True
+        play_sound("treasure")
+        state.flash, state.flash_color = "Heart claimed—bring it back to the portal!", RED
+        state.flash_until = pygame.time.get_ticks() + 1600
     if state.player == state.start:
         if state.has_treasure:
+            if state.has_heart and statistics is not None:
+                statistics.hearts = min(3, statistics.hearts + 1)
+                state.heart_banked = True
             record_result(state, statistics, "won", persist=persist_statistics)
             play_sound("win")
             return
         if state.dragon_awake:
+            if state.has_heart and statistics is not None:
+                statistics.hearts = min(3, statistics.hearts + 1)
+                state.heart_banked = True
             record_result(state, statistics, "escaped", persist=persist_statistics)
             return
     # The portal resolves first: reaching it safely ends the run even if the

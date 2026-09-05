@@ -99,7 +99,7 @@ async def main(debug: bool = False) -> None:
         pygame.display.set_caption(
             "Dungeon Escape — Hard" if hard_mode else "Dungeon Escape"
         )
-        return game.make_game(hard_mode=hard_mode)
+        return game.make_game(hard_mode=hard_mode, hearts=statistics.hearts)
 
     def move_player(delta: game.Position) -> None:
         if state is None:

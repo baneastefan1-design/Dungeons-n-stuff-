@@ -190,26 +190,41 @@
     }
   }
   function resultCopy(kind) {
+    const heartNote = state.heart_banked
+      ? ` You also delivered a heart, so the next run begins with ${state.hearts}/3 hearts.`
+      : "";
     if (kind === "won" && state.level < 6)
       return [
         "Treasure escape!",
-        `Level ${state.next_level} unlocked: the next dungeon grows from ${state.grid_size}×${state.grid_size} to ${state.grid_size + 1}×${state.grid_size + 1}. Choose a mode to continue.`,
+        `Level ${state.next_level} unlocked: the next dungeon grows from ${state.grid_size}×${state.grid_size} to ${state.grid_size + 1}×${state.grid_size + 1}. Choose a mode to continue.${heartNote}`,
       ];
     if (kind === "won" && state.next_level === 7)
       return [
         "Treasure escape!",
-        "Level 7 unlocked: the board stays at a readable 13×13, but randomized walls and dead ends now fortify the dungeon.",
+        `Level 7 unlocked: the board stays at a readable 13×13, but randomized walls and dead ends now fortify the dungeon.${heartNote}`,
       ];
     if (kind === "won" && state.next_level < 10)
       return [
         "Treasure escape!",
-        `Level ${state.next_level} unlocked: the board stays at 13×13 and the dungeon remains fortified with randomized walls and dead ends.`,
+        `Level ${state.next_level} unlocked: the board stays at 13×13 and the dungeon remains fortified with randomized walls and dead ends.${heartNote}`,
       ];
     if (kind === "won")
       return [
         "Treasure escape!",
-        `Level ${state.next_level} unlocked: 13×13 remains the size, fortification increases, and the dragon now knows every wall — Hard instincts are active.`,
+        `Level ${state.next_level} unlocked: 13×13 remains the size, fortification increases, and the dragon now knows every wall — Hard instincts are active.${heartNote}`,
       ];
+    if (kind === "escaped")
+      if (state.life_spent)
+        return [
+          "A heart saved you.",
+          `The dragon caught you, but one heart brought you safely home. ${state.hearts}/3 hearts remain for future escapes; you stay on Level ${state.level}.`,
+        ];
+      if (state.heart_banked)
+        return [
+          "Heart delivered!",
+          `You brought the heart back to the portal. Your next run has ${state.hearts}/3 hearts. You remain on Level ${state.level}.`,
+        ];
+
     if (kind === "escaped")
       return [
         "You escaped safely.",
@@ -217,7 +232,7 @@
       ];
     return [
       "The dragon got you.",
-      "The next run returns to Level 1: an 8×8 dungeon. Inspect this dungeon or choose a mode to try again.",
+      "The next run returns to Level 1: an 8×8 dungeon with all 3 hearts restored. Inspect this dungeon or choose a mode to try again.",
     ];
   }
   function showResult() {
@@ -264,6 +279,9 @@
         treasure: state.treasure,
         status: state.status,
         dragon_awake: state.dragon_awake,
+        hearts: state.hearts,
+        heart: state.heart,
+        has_heart: state.has_heart,
         hard_instincts: state.forced_hard,
         phantom: state.phantom,
         walls: {
@@ -369,7 +387,7 @@
     ctx.font = `700 ${Math.max(14, tile * 0.31)}px system-ui`;
     ctx.textAlign = "left";
     ctx.fillText(
-      `Level ${state.level}   Moves ${state.moves}   ${state.grid_size}×${state.grid_size}   ${threat}${state.has_treasure ? "   Treasure ✓" : ""}`,
+      `Level ${state.level}   Moves ${state.moves}   ${state.grid_size}×${state.grid_size}   ${threat}   Hearts ${"♥".repeat(state.hearts)}${state.has_treasure ? "   Treasure ✓" : ""}${state.has_heart ? "   Heart ✓" : ""}`,
       left,
       top - Math.max(30, tile * 0.48),
     );
@@ -409,6 +427,26 @@
         top + state.treasure[1] * tile,
         tile,
       );
+    const heartVisible =
+      state.heart &&
+      !state.has_heart &&
+      (state.debug ||
+        state.status !== "playing" ||
+        has(state.visited, ...state.heart) ||
+        Math.max(
+          Math.abs(state.heart[0] - state.player[0]),
+          Math.abs(state.heart[1] - state.player[1]),
+        ) <= 2);
+    if (heartVisible) {
+      ctx.fillStyle = "#ff5f70";
+      ctx.font = `900 ${Math.max(18, tile * 0.58)}px system-ui`;
+      ctx.textAlign = "center";
+      ctx.fillText(
+        "♥",
+        left + (state.heart[0] + 0.5) * tile,
+        top + (state.heart[1] + 0.68) * tile,
+      );
+    }
     if (state.dragon_awake || state.status !== "playing")
       sprite(
         state.dragon_awake ? "dragon/awake" : "dragon/sleeping",

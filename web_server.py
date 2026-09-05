@@ -41,9 +41,17 @@ def initialise_database() -> None:
                 best_win_moves INTEGER,
                 win_streak INTEGER NOT NULL DEFAULT 0,
                 highest_win_streak INTEGER NOT NULL DEFAULT 0,
+                hearts INTEGER NOT NULL DEFAULT 3,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
             """)
+        player_columns = {
+            row[1] for row in connection.execute("PRAGMA table_info(players)")
+        }
+        if "hearts" not in player_columns:
+            connection.execute(
+                "ALTER TABLE players ADD COLUMN hearts INTEGER NOT NULL DEFAULT 3"
+            )
         connection.execute("""
             CREATE TABLE IF NOT EXISTS client_profiles (
                 client_id TEXT PRIMARY KEY,
@@ -103,8 +111,12 @@ def load_player(username: str) -> game.Statistics:
         ).fetchone()
     if row is None:
         return game.Statistics()
+    defaults = game.Statistics()
     return game.Statistics(
-        **{field: row[field] for field in game.Statistics.__dataclass_fields__}
+        **{
+            field: row[field] if field in row.keys() else getattr(defaults, field)
+            for field in game.Statistics.__dataclass_fields__
+        }
     )
 
 
@@ -113,12 +125,13 @@ def save_player(username: str, statistics: game.Statistics) -> None:
     with database() as connection:
         connection.execute(
             """
-            INSERT INTO players (username, wins, dragon_wins, escapes, total_win_moves, best_win_moves, win_streak, highest_win_streak)
-            VALUES (:username, :wins, :dragon_wins, :escapes, :total_win_moves, :best_win_moves, :win_streak, :highest_win_streak)
+            INSERT INTO players (username, wins, dragon_wins, escapes, total_win_moves, best_win_moves, win_streak, highest_win_streak, hearts)
+            VALUES (:username, :wins, :dragon_wins, :escapes, :total_win_moves, :best_win_moves, :win_streak, :highest_win_streak, :hearts)
             ON CONFLICT(username) DO UPDATE SET
                 wins = excluded.wins, dragon_wins = excluded.dragon_wins, escapes = excluded.escapes,
                 total_win_moves = excluded.total_win_moves, best_win_moves = excluded.best_win_moves,
                 win_streak = excluded.win_streak, highest_win_streak = excluded.highest_win_streak,
+                hearts = excluded.hearts,
                 updated_at = CURRENT_TIMESTAMP
             """,
             {"username": username, **values},
@@ -184,6 +197,11 @@ def serialise(
         "scorched": [position(value) for value in state.scorched],
         "moves": state.moves,
         "has_treasure": state.has_treasure,
+        "heart": position(state.heart) if state.heart is not None else None,
+        "has_heart": state.has_heart,
+        "heart_banked": state.heart_banked,
+        "life_spent": state.life_spent,
+        "hearts": statistics.hearts,
         "dragon_awake": state.dragon_awake,
         "hard_mode": state.hard_mode,
         "status": state.status,
@@ -282,6 +300,7 @@ async def game_socket(websocket: WebSocket) -> None:
                     grid_size=grid_size,
                     wall_count=wall_count,
                     extra_walls=extra_walls,
+                    hearts=statistics.hearts,
                 )
                 phantom = make_phantom(state) if debug_mode else None
             elif action == "move" and state is not None:
@@ -307,6 +326,7 @@ async def game_socket(websocket: WebSocket) -> None:
                     grid_size=grid_size,
                     wall_count=wall_count,
                     extra_walls=extra_walls,
+                    hearts=statistics.hearts,
                 )
                 phantom = make_phantom(state) if debug_mode else None
             if state is not None:
