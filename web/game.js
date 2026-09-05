@@ -33,8 +33,9 @@
   updateSoundButton();
   function send(value) { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(value)); }
   function resultCopy(kind) {
-    const nextSize = Math.min(16, state.grid_size + 1);
-    if (kind === 'won') return ['Treasure escape!', `Your streak is ${state.streak}. The next dungeon grows from ${state.grid_size}×${state.grid_size} to ${nextSize}×${nextSize}. Choose a mode to continue.`];
+    if (kind === 'won' && state.grid_size < 13) return ['Treasure escape!', `Your streak is ${state.streak}. The next dungeon grows from ${state.grid_size}×${state.grid_size} to ${state.grid_size + 1}×${state.grid_size + 1}. Choose a mode to continue.`];
+    if (kind === 'won' && state.virtual_size < 15) return ['Treasure escape!', `The board stays at a readable 13×13. Fortification tier ${state.fortification_level} adds randomized walls and dead ends to the next dungeon.`];
+    if (kind === 'won') return ['Treasure escape!', `The board stays at 13×13. Fortification tier ${state.fortification_level} adds randomized walls and the dragon now knows every wall — Hard instincts are active.`];
     if (kind === 'escaped') return ['You escaped safely.', `You returned without the treasure, so your streak and next dungeon stay at ${state.grid_size}×${state.grid_size}. Choose a mode to continue.`];
     return ['The dragon got you.', 'Your streak resets, so the next dungeon returns to 8×8. Inspect this dungeon or choose a mode to try again.'];
   }
@@ -49,7 +50,7 @@
   function draw() {
     const width = canvas.clientWidth, height = canvas.clientHeight; ctx.clearRect(0,0,width,height); ctx.fillStyle = '#111827'; ctx.fillRect(0,0,width,height); if (!state) return;
     const pad = Math.min(width,height)*.025, hud = Math.max(68,height*.1), tile = Math.min((width-pad*2)/state.grid_size,(height-pad*2-hud)/state.grid_size), board = tile*state.grid_size, left=(width-board)/2, top=pad+hud;
-    ctx.fillStyle='#f6f4e8'; ctx.font=`700 ${Math.max(14,tile*.31)}px system-ui`; ctx.textAlign='left'; ctx.fillText(`Moves ${state.moves}   ${state.hard_mode ? 'Hard' : 'Normal'}${state.has_treasure ? '   Treasure ✓' : ''}`,left,top-Math.max(30,tile*.48));
+    const threat = state.forced_hard ? 'Hard instincts' : (state.hard_mode ? 'Hard' : 'Normal'); ctx.fillStyle='#f6f4e8'; ctx.font=`700 ${Math.max(14,tile*.31)}px system-ui`; ctx.textAlign='left'; ctx.fillText(`Moves ${state.moves}   ${state.grid_size}×${state.grid_size}   ${threat}${state.has_treasure ? '   Treasure ✓' : ''}`,left,top-Math.max(30,tile*.48));
     if (state.hint === 'The air feels warm nearby…') { ctx.fillStyle='#ffd34d'; ctx.font=`700 ${Math.max(13,tile*.24)}px system-ui`; ctx.fillText('⚠ The air feels warm nearby…',left,top-10); }
     for(let y=0;y<state.grid_size;y++) for(let x=0;x<state.grid_size;x++) sprite(`tiles/floor_${(x+y)%2+1}`,left+x*tile,top+y*tile,tile);
     for(const [x,y] of state.scorched) sprite('scorch',left+x*tile,top+y*tile,tile);

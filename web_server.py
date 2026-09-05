@@ -153,6 +153,9 @@ def serialise(state: game.GameState, statistics: game.Statistics) -> dict[str, A
         hint = "The dungeon is quiet."
     return {
         "grid_size": game.GRID_SIZE,
+        "virtual_size": min(game.MAX_GRID_SIZE, 8 + statistics.win_streak),
+        "fortification_level": max(0, min(game.MAX_GRID_SIZE, 8 + statistics.win_streak) - 13),
+        "forced_hard": statistics.win_streak >= 7,
         "streak": statistics.win_streak,
         "player": position(state.player),
         "start": position(state.start),
@@ -214,8 +217,10 @@ async def game_socket(websocket: WebSocket) -> None:
                 if selected_name != username:
                     username = selected_name
                     statistics = load_player(username)
-                game.configure_difficulty(statistics)
-                state = game.make_game(hard_mode=message.get("difficulty") == "hard")
+                game.configure_difficulty(statistics, max_grid_size=13)
+                state = game.make_game(
+                    hard_mode=message.get("difficulty") == "hard" or statistics.win_streak >= 7
+                )
             elif action == "move" and state is not None:
                 delta = moves.get(message.get("direction"))
                 if delta is not None:
@@ -223,7 +228,7 @@ async def game_socket(websocket: WebSocket) -> None:
                     if state.status != "playing" and username is not None:
                         save_player(username, statistics)
             elif action == "restart" and state is not None:
-                game.configure_difficulty(statistics)
+                game.configure_difficulty(statistics, max_grid_size=13)
                 state = game.make_game(hard_mode=state.hard_mode)
             if state is not None:
                 await websocket.send_json(serialise(state, statistics))

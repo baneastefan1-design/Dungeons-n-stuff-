@@ -25,6 +25,7 @@ WIDTH = GRID_SIZE * TILE_SIZE
 HEIGHT = GRID_SIZE * TILE_SIZE + HUD_HEIGHT + MENU_HEIGHT
 FPS = 60
 WALL_COUNT = 12
+EXTRA_WALLS = 0
 MAX_GRID_SIZE = 16
 MIN_TILE_SIZE = 42
 WAKE_DISTANCE = 3
@@ -166,9 +167,10 @@ def record_result(state: GameState, statistics: Statistics | None, status: str) 
     save_statistics(statistics)
 
 
-def configure_difficulty(statistics: Statistics) -> None:
+def configure_difficulty(statistics: Statistics, *, max_grid_size: int | None = None) -> None:
     """Scale a win streak into a larger dungeon that still fits the display."""
-    global GRID_SIZE, TILE_SIZE, WALL_COUNT, WIDTH, HEIGHT
+    global GRID_SIZE, TILE_SIZE, WALL_COUNT, EXTRA_WALLS, WIDTH, HEIGHT
+
     # Use the desktop resolution, not the active game window. The latter can
     # report the previous, smaller window and incorrectly shrink a new run.
     try:
@@ -187,7 +189,7 @@ def configure_difficulty(statistics: Statistics) -> None:
     # The active streak controls difficulty. A dragon win clears it and
     # restores the default grid, while the all-time high remains recorded.
     requested_size = min(MAX_GRID_SIZE, 8 + statistics.win_streak)
-    grid_size = requested_size
+    grid_size = min(requested_size, max_grid_size) if max_grid_size is not None else requested_size
     while grid_size > 8 and min(max_width // grid_size, max_height // grid_size) < MIN_TILE_SIZE:
         grid_size -= 1
     TILE_SIZE = min(56, max_width // grid_size, max_height // grid_size)
@@ -196,6 +198,9 @@ def configure_difficulty(statistics: Statistics) -> None:
     HEIGHT = GRID_SIZE * TILE_SIZE + HUD_HEIGHT + MENU_HEIGHT
     # Each extra row adds walls while preserving the original light density.
     WALL_COUNT = 12 + (GRID_SIZE - 8) * 3
+    # Web dungeons stop growing at a readable 13×13. Subsequent wins add
+    # randomized barriers instead of shrinking the board's touch targets.
+    EXTRA_WALLS = 3 * max(0, requested_size - max_grid_size) if max_grid_size is not None else 0
 
 
 def make_sound(notes: list[tuple[float, float]], volume: float = 0.28) -> pygame.mixer.Sound | None:
@@ -310,6 +315,9 @@ def make_game(hard_mode: bool = False) -> GameState:
             (random.randrange(GRID_SIZE - 1), random.randrange(GRID_SIZE))
             for _ in range(WALL_COUNT)
         }
+        for _ in range(EXTRA_WALLS):
+            state.horizontal_walls.add((random.randrange(GRID_SIZE), random.randrange(GRID_SIZE - 1)))
+            state.vertical_walls.add((random.randrange(GRID_SIZE - 1), random.randrange(GRID_SIZE)))
         candidates = [
             (x, y)
             for x in range(GRID_SIZE)
