@@ -55,6 +55,8 @@ docker compose up --build
 
 Open `http://localhost:8080` on a computer or phone on the same network (replace `localhost` with the host computer's LAN address for a phone). The browser draws the included illustrated artwork in an HTML Canvas, while a Python WebSocket service runs the existing `game.py` maze, movement, wall-discovery, treasure, and dragon rules. It supports keyboard controls, touch buttons, and swipes.
 
+Browser players enter an explorer name before a run. Completed results are saved by the Python server in a persistent Docker SQLite volume and can be viewed with the **Rankings** button. Use a unique name if multiple people share the server.
+
 ## Run the Game
 
 The project uses a local virtual environment and `pygame-ce`.

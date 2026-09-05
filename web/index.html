@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/static/desktop-controls.css" />
     <link rel="stylesheet" href="/static/two-difficulties.css" />
     <link rel="stylesheet" href="/static/sound-controls.css" />
+    <link rel="stylesheet" href="/static/player-profile.css" />
     <title>Dungeon Escape</title>
   </head>
   <body>
@@ -18,6 +19,8 @@
       <header>
         <div><p class="eyebrow">DUNGEON ESCAPE · ILLUSTRATED WEB EDITION</p><h1>Find the treasure. Escape the dragon.</h1></div>
         <div class="header-actions">
+          <button id="profile-toggle" class="quiet-button" type="button">Change player</button>
+          <button id="leaderboard-toggle" class="quiet-button" type="button">Rankings</button>
           <button id="sound-toggle" class="quiet-button" type="button" aria-pressed="true">Sound: on</button>
           <button id="new-game" class="quiet-button" type="button">Main menu</button>
         </div>
@@ -27,12 +30,21 @@
         <div id="menu" class="overlay"><div class="dialog">
           <p class="eyebrow">CHOOSE YOUR RISK</p><h2 id="menu-title">Dungeon Escape</h2>
           <p id="menu-copy">Find the treasure, evade the sleeping dragon, and return to the portal.</p>
+          <label class="name-field" for="username">Explorer name
+            <input id="username" name="username" type="text" maxlength="24" autocomplete="nickname" placeholder="Enter a username" required />
+          </label>
           <div class="difficulty-row">
             <button data-mode="normal" type="button"><strong>Normal</strong><span>Dragon learns the maze</span></button>
             <button data-mode="hard" type="button"><strong>Hard</strong><span>Dragon knows every wall</span></button>
           </div>
           <button id="result-dismiss" class="quiet-button" type="button" hidden>Inspect this dungeon</button>
           <p class="hint">The original Python rules run on the server. Use arrow keys, WASD, or touch controls.</p>
+        </div></div>
+        <div id="leaderboard" class="overlay" hidden><div class="dialog leaderboard-dialog">
+          <p class="eyebrow">SERVER RANKINGS</p><h2>Hall of Escape</h2>
+          <p>Ranked by treasure escapes, then best streak.</p>
+          <div class="ranking-table-wrap"><table><thead><tr><th>#</th><th>Explorer</th><th>Wins</th><th>Best</th><th>Streak</th></tr></thead><tbody id="leaderboard-body"></tbody></table></div>
+          <button id="leaderboard-close" class="quiet-button" type="button">Close rankings</button>
         </div></div>
       </section>
       <section class="controls" aria-label="Movement controls">
