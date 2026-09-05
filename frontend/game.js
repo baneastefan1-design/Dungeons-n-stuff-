@@ -27,6 +27,7 @@
     "tiles/wall_horizontal",
     "tiles/wall_vertical",
     "portal",
+    "heart",
     "treasure_open",
     "scorch",
     "fog",
@@ -386,10 +387,29 @@
     ctx.fillStyle = "#f6f4e8";
     ctx.font = `700 ${Math.max(14, tile * 0.31)}px system-ui`;
     ctx.textAlign = "left";
+    const hudY = top - Math.max(30, tile * 0.48);
+    const hudPrefix = `Level ${state.level}   Moves ${state.moves}   ${state.grid_size}×${state.grid_size}   ${threat}   Hearts `;
+    ctx.fillText(hudPrefix, left, hudY);
+    const heartX = left + ctx.measureText(hudPrefix).width;
+    const heartSize = Math.max(16, tile * 0.34);
+    if (assets.heart)
+      for (let index = 0; index < state.hearts; index++)
+        ctx.drawImage(
+          assets.heart,
+          heartX + index * heartSize,
+          hudY - heartSize * 0.82,
+          heartSize,
+          heartSize,
+        );
+    else {
+      ctx.fillStyle = "#ff4055";
+      ctx.fillText("♥".repeat(state.hearts), heartX, hudY);
+    }
+    ctx.fillStyle = "#f6f4e8";
     ctx.fillText(
-      `Level ${state.level}   Moves ${state.moves}   ${state.grid_size}×${state.grid_size}   ${threat}   Hearts ${"♥".repeat(state.hearts)}${state.has_treasure ? "   Treasure ✓" : ""}${state.has_heart ? "   Heart ✓" : ""}`,
-      left,
-      top - Math.max(30, tile * 0.48),
+      `${state.has_treasure ? "   Treasure ✓" : ""}${state.has_heart ? "   Heart ✓" : ""}`,
+      heartX + heartSize * state.hearts,
+      hudY,
     );
     if (state.hint === "The air feels warm nearby…") {
       ctx.fillStyle = "#ffd34d";
@@ -438,13 +458,11 @@
           Math.abs(state.heart[1] - state.player[1]),
         ) <= 2);
     if (heartVisible) {
-      ctx.fillStyle = "#ff5f70";
-      ctx.font = `900 ${Math.max(18, tile * 0.58)}px system-ui`;
-      ctx.textAlign = "center";
-      ctx.fillText(
-        "♥",
-        left + (state.heart[0] + 0.5) * tile,
-        top + (state.heart[1] + 0.68) * tile,
+      sprite(
+        "heart",
+        left + state.heart[0] * tile,
+        top + state.heart[1] * tile,
+        tile,
       );
     }
     if (state.dragon_awake || state.status !== "playing")
