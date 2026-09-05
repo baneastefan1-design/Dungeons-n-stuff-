@@ -1,2 +1,15 @@
-.header-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; }
-@media (max-width: 520px) { .header-actions { gap: 5px; } .header-actions .quiet-button { padding: 0 9px; } }
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+@media (max-width: 520px) {
+  .header-actions {
+    gap: 5px;
+  }
+  .header-actions .quiet-button {
+    padding: 0 9px;
+  }
+}

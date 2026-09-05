@@ -24,7 +24,9 @@ from rendering import (
 def set_window_icon() -> None:
     """Use the bundled Dungeon Escape artwork for development windows."""
     try:
-        icon = pygame.image.load(str(game.resource_path("assets/dungeon_escape_icon.png")))
+        icon = pygame.image.load(
+            str(game.resource_path("assets/dungeon_escape_icon.png"))
+        )
         pygame.display.set_icon(icon)
     except pygame.error:
         # The game remains playable if an optional image asset is unavailable.
@@ -79,10 +81,14 @@ async def main(debug: bool = False) -> None:
     touch_start: game.Position | None = None
     pressed_button: str | None = None
     key_moves = {
-        pygame.K_LEFT: (-1, 0), pygame.K_a: (-1, 0),
-        pygame.K_RIGHT: (1, 0), pygame.K_d: (1, 0),
-        pygame.K_UP: (0, -1), pygame.K_w: (0, -1),
-        pygame.K_DOWN: (0, 1), pygame.K_s: (0, 1),
+        pygame.K_LEFT: (-1, 0),
+        pygame.K_a: (-1, 0),
+        pygame.K_RIGHT: (1, 0),
+        pygame.K_d: (1, 0),
+        pygame.K_UP: (0, -1),
+        pygame.K_w: (0, -1),
+        pygame.K_DOWN: (0, 1),
+        pygame.K_s: (0, 1),
     }
 
     def start_game(selected_hard_mode: bool) -> game.GameState:
@@ -90,7 +96,9 @@ async def main(debug: bool = False) -> None:
         hard_mode = selected_hard_mode
         game.configure_difficulty(statistics)
         screen = pygame.display.set_mode((game.WIDTH, game.HEIGHT))
-        pygame.display.set_caption("Dungeon Escape — Hard" if hard_mode else "Dungeon Escape")
+        pygame.display.set_caption(
+            "Dungeon Escape — Hard" if hard_mode else "Dungeon Escape"
+        )
         return game.make_game(hard_mode=hard_mode)
 
     def move_player(delta: game.Position) -> None:
@@ -109,30 +117,44 @@ async def main(debug: bool = False) -> None:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-                elif event.key == pygame.K_r and state is not None and state.status != "playing":
+                elif (
+                    event.key == pygame.K_r
+                    and state is not None
+                    and state.status != "playing"
+                ):
                     state = start_game(hard_mode)
                     phantom = make_phantom(state) if debug else None
                 elif state is not None and event.key in key_moves:
                     move_player(key_moves[event.key])
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if state is None:
-                    pressed_button = next((
-                        f"style:{style}"
-                        for style, rect in style_button_rects(game).items()
-                        if rect.collidepoint(event.pos)
-                    ), None)
-                    if pressed_button is None:
-                        pressed_button = next((
-                            mode
-                            for mode, rect in mode_button_rects(game).items()
+                    pressed_button = next(
+                        (
+                            f"style:{style}"
+                            for style, rect in style_button_rects(game).items()
                             if rect.collidepoint(event.pos)
-                        ), None)
+                        ),
+                        None,
+                    )
+                    if pressed_button is None:
+                        pressed_button = next(
+                            (
+                                mode
+                                for mode, rect in mode_button_rects(game).items()
+                                if rect.collidepoint(event.pos)
+                            ),
+                            None,
+                        )
                 elif main_menu_button_rect(game).collidepoint(event.pos):
                     pressed_button = "main_menu"
                 else:
                     touch_start = event.pos
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                if state is None and pressed_button is not None and pressed_button.startswith("style:"):
+                if (
+                    state is None
+                    and pressed_button is not None
+                    and pressed_button.startswith("style:")
+                ):
                     style_name = pressed_button.removeprefix("style:")
                     button = style_button_rects(game).get(style_name)
                     if button is not None and button.collidepoint(event.pos):
@@ -142,7 +164,9 @@ async def main(debug: bool = False) -> None:
                     if button.collidepoint(event.pos):
                         state = start_game(selected_hard_mode=pressed_button == "hard")
                         phantom = make_phantom(state) if debug else None
-                elif pressed_button == "main_menu" and main_menu_button_rect(game).collidepoint(event.pos):
+                elif pressed_button == "main_menu" and main_menu_button_rect(
+                    game
+                ).collidepoint(event.pos):
                     state = None
                     phantom = None
                     hard_mode = False
@@ -166,7 +190,11 @@ async def main(debug: bool = False) -> None:
 
         if state is None:
             draw_start_menu(
-                screen, title_font, body_font, statistics, game,
+                screen,
+                title_font,
+                body_font,
+                statistics,
+                game,
                 art_style=art_style,
                 pressed_button=pressed_button,
             )

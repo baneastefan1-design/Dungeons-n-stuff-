@@ -34,7 +34,10 @@ class AssetManager:
 
     def __init__(self, resource_path: Callable[[str], Path]) -> None:
         self._resource_path = resource_path
-        self._cache: dict[tuple[ArtStyle, str, tuple[int, int] | None, bool, bool], pygame.Surface | None] = {}
+        self._cache: dict[
+            tuple[ArtStyle, str, tuple[int, int] | None, bool, bool],
+            pygame.Surface | None,
+        ] = {}
 
     def get(
         self,
@@ -62,7 +65,10 @@ class AssetManager:
         if size is not None and image.get_size() != size:
             if fit:
                 scale = min(size[0] / image.get_width(), size[1] / image.get_height())
-                target_size = (max(1, round(image.get_width() * scale)), max(1, round(image.get_height() * scale)))
+                target_size = (
+                    max(1, round(image.get_width() * scale)),
+                    max(1, round(image.get_height() * scale)),
+                )
             else:
                 target_size = size
             image = pygame.transform.smoothscale(image, target_size)

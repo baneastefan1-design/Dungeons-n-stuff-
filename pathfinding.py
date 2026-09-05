@@ -4,7 +4,6 @@ from collections.abc import Callable, Iterable
 import heapq
 from itertools import count
 
-
 Position = tuple[int, int]
 
 

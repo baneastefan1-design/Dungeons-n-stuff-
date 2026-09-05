@@ -1,3 +1,5 @@
 @media (min-width: 700px) {
-  .controls { display: block; }
+  .controls {
+    display: block;
+  }
 }

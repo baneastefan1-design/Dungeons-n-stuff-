@@ -1,1 +1,3 @@
-.difficulty-row { grid-template-columns: repeat(2, 1fr); }
+.difficulty-row {
+  grid-template-columns: repeat(2, 1fr);
+}
