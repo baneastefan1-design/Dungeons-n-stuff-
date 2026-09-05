@@ -10,13 +10,17 @@
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/desktop-controls.css" />
     <link rel="stylesheet" href="/static/two-difficulties.css" />
+    <link rel="stylesheet" href="/static/sound-controls.css" />
     <title>Dungeon Escape</title>
   </head>
   <body>
     <main class="app-shell">
       <header>
         <div><p class="eyebrow">DUNGEON ESCAPE · ILLUSTRATED WEB EDITION</p><h1>Find the treasure. Escape the dragon.</h1></div>
-        <button id="new-game" class="quiet-button" type="button">Main menu</button>
+        <div class="header-actions">
+          <button id="sound-toggle" class="quiet-button" type="button" aria-pressed="true">Sound: on</button>
+          <button id="new-game" class="quiet-button" type="button">Main menu</button>
+        </div>
       </header>
       <section class="game-panel" aria-label="Dungeon game">
         <canvas id="game" aria-label="Dungeon Escape game board"></canvas>
