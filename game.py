@@ -224,11 +224,13 @@ def configure_difficulty(
     HEIGHT = GRID_SIZE * TILE_SIZE + HUD_HEIGHT + MENU_HEIGHT
     # Each extra row adds walls while preserving the original light density.
     WALL_COUNT = 12 + (GRID_SIZE - 8) * 3
-    # Web dungeons stop growing at a readable 13×13. Subsequent wins add
-    # randomized barriers instead of shrinking the board's touch targets.
-    EXTRA_WALLS = (
-        3 * max(0, requested_size - max_grid_size) if max_grid_size is not None else 0
-    )
+    # Web dungeons stop growing at a readable 13×13. Levels 7–9 ramp up by
+    # three barriers per level; every later level adds one more barrier set.
+    if max_grid_size is None:
+        EXTRA_WALLS = 0
+    else:
+        level = statistics.win_streak + 1
+        EXTRA_WALLS = 3 * max(0, min(level, 9) - 6) + max(0, level - 9)
 
 
 def make_sound(
@@ -349,12 +351,22 @@ def make_game(hard_mode: bool = False, level: int = 1) -> GameState:
             for _ in range(WALL_COUNT)
         }
         for _ in range(EXTRA_WALLS):
-            state.horizontal_walls.add(
-                (random.randrange(GRID_SIZE), random.randrange(GRID_SIZE - 1))
-            )
-            state.vertical_walls.add(
-                (random.randrange(GRID_SIZE - 1), random.randrange(GRID_SIZE))
-            )
+            horizontal_options = [
+                (x, y)
+                for x in range(GRID_SIZE)
+                for y in range(GRID_SIZE - 1)
+                if (x, y) not in state.horizontal_walls
+            ]
+            vertical_options = [
+                (x, y)
+                for x in range(GRID_SIZE - 1)
+                for y in range(GRID_SIZE)
+                if (x, y) not in state.vertical_walls
+            ]
+            if horizontal_options:
+                state.horizontal_walls.add(random.choice(horizontal_options))
+            if vertical_options:
+                state.vertical_walls.add(random.choice(vertical_options))
         candidates = [
             (x, y)
             for x in range(GRID_SIZE)
