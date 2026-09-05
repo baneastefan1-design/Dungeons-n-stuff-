@@ -381,7 +381,12 @@ def make_game(hard_mode: bool = False, level: int = 1) -> GameState:
             and max(abs(p[0] - state.treasure[0]), abs(p[1] - state.treasure[1])) >= 2
         ]
         state.dragon = random.choice(dragon_candidates)
-        if reachable(state, state.start, state.treasure):
+        # Every generated dungeon keeps the portal, treasure, and dragon in
+        # one connected area. The player always has a route home, and the
+        # dragon can always hunt the player after it wakes.
+        if reachable(state, state.start, state.treasure) and reachable(
+            state, state.dragon, state.start
+        ):
             return state
 
 
