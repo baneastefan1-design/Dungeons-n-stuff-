@@ -160,7 +160,7 @@ def serialise(
     else:
         hint = "The dungeon is quiet."
     return {
-        "grid_size": game.GRID_SIZE,
+        "grid_size": state.grid_size,
         "level": state.level,
         "next_level": statistics.win_streak + 1,
         "fortification_level": max(0, min(game.MAX_WEB_LEVEL, state.level) - 6),
@@ -274,11 +274,14 @@ async def game_socket(websocket: WebSocket) -> None:
                 elif selected_name != username:
                     username = selected_name
                     statistics = load_player(username)
-                game.configure_difficulty(statistics, max_grid_size=13)
+                grid_size, wall_count, extra_walls = game.browser_difficulty(statistics)
                 state = game.make_game(
                     hard_mode=message.get("difficulty") == "hard"
                     or statistics.win_streak >= 9,
                     level=statistics.win_streak + 1,
+                    grid_size=grid_size,
+                    wall_count=wall_count,
+                    extra_walls=extra_walls,
                 )
                 phantom = make_phantom(state) if debug_mode else None
             elif action == "move" and state is not None:
@@ -297,9 +300,13 @@ async def game_socket(websocket: WebSocket) -> None:
                     ):
                         save_player(username, statistics)
             elif action == "restart" and state is not None:
-                game.configure_difficulty(statistics, max_grid_size=13)
+                grid_size, wall_count, extra_walls = game.browser_difficulty(statistics)
                 state = game.make_game(
-                    hard_mode=state.hard_mode, level=statistics.win_streak + 1
+                    hard_mode=state.hard_mode,
+                    level=statistics.win_streak + 1,
+                    grid_size=grid_size,
+                    wall_count=wall_count,
+                    extra_walls=extra_walls,
                 )
                 phantom = make_phantom(state) if debug_mode else None
             if state is not None:

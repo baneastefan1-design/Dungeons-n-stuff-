@@ -95,6 +95,9 @@ class Statistics:
 
 @dataclass
 class GameState:
+    grid_size: int = field(default_factory=lambda: GRID_SIZE)
+    wall_count: int = WALL_COUNT
+    extra_walls: int = EXTRA_WALLS
     player: Position = (0, 0)
     start: Position = (0, 0)
     visited: set[Position] = field(default_factory=set)
@@ -234,6 +237,18 @@ def configure_difficulty(
         EXTRA_WALLS = 3 * max(0, min(level, 9) - 6) + max(0, level - 9)
 
 
+def browser_difficulty(statistics: Statistics) -> tuple[int, int, int]:
+    """Return isolated web-session settings without mutating desktop globals."""
+    level = statistics.win_streak + 1
+    grid_size = min(13, 8 + statistics.win_streak)
+    wall_count = 12 + (grid_size - 8) * 3
+    fortified_level = min(MAX_WEB_LEVEL, level)
+    extra_walls = 3 * max(0, min(fortified_level, 9) - 6) + max(
+        0, fortified_level - 9
+    )
+    return grid_size, wall_count, extra_walls
+
+
 def make_sound(
     notes: list[tuple[float, float]], volume: float = 0.28
 ) -> pygame.mixer.Sound | None:
@@ -307,7 +322,7 @@ def neighbours(state: GameState, pos: Position, diagonals: bool = False):
     x, y = pos
     for dx, dy in directions:
         nxt = (x + dx, y + dy)
-        if not (0 <= nxt[0] < GRID_SIZE and 0 <= nxt[1] < GRID_SIZE):
+        if not (0 <= nxt[0] < state.grid_size and 0 <= nxt[1] < state.grid_size):
             continue
         if dx and dy:
             horizontal_first = not edge_blocked(
@@ -338,30 +353,46 @@ def reachable(state: GameState, start: Position, goal: Position) -> bool:
     return False
 
 
-def make_game(hard_mode: bool = False, level: int = 1) -> GameState:
+def make_game(
+    hard_mode: bool = False,
+    level: int = 1,
+    *,
+    grid_size: int | None = None,
+    wall_count: int | None = None,
+    extra_walls: int | None = None,
+) -> GameState:
     """Generate a map whose treasure is reachable from the entrance."""
     while True:
-        state = GameState(hard_mode=hard_mode, level=level)
+        active_grid_size = GRID_SIZE if grid_size is None else grid_size
+        active_wall_count = WALL_COUNT if wall_count is None else wall_count
+        active_extra_walls = EXTRA_WALLS if extra_walls is None else extra_walls
+        state = GameState(
+            grid_size=active_grid_size,
+            wall_count=active_wall_count,
+            extra_walls=active_extra_walls,
+            hard_mode=hard_mode,
+            level=level,
+        )
         state.visited.add(state.start)
         state.horizontal_walls = {
-            (random.randrange(GRID_SIZE), random.randrange(GRID_SIZE - 1))
-            for _ in range(WALL_COUNT)
+            (random.randrange(state.grid_size), random.randrange(state.grid_size - 1))
+            for _ in range(state.wall_count)
         }
         state.vertical_walls = {
-            (random.randrange(GRID_SIZE - 1), random.randrange(GRID_SIZE))
-            for _ in range(WALL_COUNT)
+            (random.randrange(state.grid_size - 1), random.randrange(state.grid_size))
+            for _ in range(state.wall_count)
         }
-        for _ in range(EXTRA_WALLS):
+        for _ in range(state.extra_walls):
             horizontal_options = [
                 (x, y)
-                for x in range(GRID_SIZE)
-                for y in range(GRID_SIZE - 1)
+                for x in range(state.grid_size)
+                for y in range(state.grid_size - 1)
                 if (x, y) not in state.horizontal_walls
             ]
             vertical_options = [
                 (x, y)
-                for x in range(GRID_SIZE - 1)
-                for y in range(GRID_SIZE)
+                for x in range(state.grid_size - 1)
+                for y in range(state.grid_size)
                 if (x, y) not in state.vertical_walls
             ]
             if horizontal_options:
@@ -370,9 +401,9 @@ def make_game(hard_mode: bool = False, level: int = 1) -> GameState:
                 state.vertical_walls.add(random.choice(vertical_options))
         candidates = [
             (x, y)
-            for x in range(GRID_SIZE)
-            for y in range(GRID_SIZE)
-            if max(x, y) >= GRID_SIZE // 2
+            for x in range(state.grid_size)
+            for y in range(state.grid_size)
+            if max(x, y) >= state.grid_size // 2
         ]
         state.treasure = random.choice(candidates)
         dragon_candidates = [
@@ -448,7 +479,7 @@ def dragon_path(state: GameState) -> list[Position]:
         state.dragon,
         state.player,
         lambda pos: dragon_neighbours(state, pos),
-        GRID_SIZE,
+        state.grid_size,
     )
 
 
@@ -458,7 +489,7 @@ def hard_dragon_path(state: GameState) -> list[Position]:
         state.dragon,
         state.player,
         lambda pos: neighbours(state, pos, diagonals=True),
-        GRID_SIZE,
+        state.grid_size,
     )
 
 
@@ -492,7 +523,7 @@ def attempt_move(
     x, y = state.player
     dx, dy = delta
     target = (x + dx, y + dy)
-    if not (0 <= target[0] < GRID_SIZE and 0 <= target[1] < GRID_SIZE):
+    if not (0 <= target[0] < state.grid_size and 0 <= target[1] < state.grid_size):
         play_sound("bump")
         state.flash, state.flash_color = "The dungeon ends here.", MUTED
         state.flash_until = pygame.time.get_ticks() + 700
