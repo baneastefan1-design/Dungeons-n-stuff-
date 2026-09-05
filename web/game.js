@@ -1,19 +1,22 @@
 (() => {
   const canvas = document.querySelector('#game'), ctx = canvas.getContext('2d'), menu = document.querySelector('#menu'), status = document.querySelector('#status');
-  const menuTitle = document.querySelector('#menu-title'), menuCopy = document.querySelector('#menu-copy'), assets = {};
+  const menuTitle = document.querySelector('#menu-title'), menuCopy = document.querySelector('#menu-copy'), dismissResult = document.querySelector('#result-dismiss'), nextButton = document.querySelector('#new-game'), assets = {};
   const names = ['hero/idle','hero/walk','dragon/sleeping','dragon/awake','tiles/floor_1','tiles/floor_2','tiles/wall_horizontal','tiles/wall_vertical','portal','treasure_open','scorch','fog'];
   const keys = {ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right'};
-  let state = null, socket = null, swipe = null, resultTimer = null;
+  let state = null, socket = null, swipe = null, resultTimer = null, lastResult = null;
   const load = name => new Promise(resolve => { const img = new Image(); img.src = `/assets/illustrated/${name}.png`; img.onload = () => { assets[name] = img; resolve(); }; img.onerror = resolve; });
   Promise.all(names.map(load)).then(resize);
   function send(value) { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(value)); }
   function resultCopy(kind) {
-    if (kind === 'won') return ['You escaped with the treasure!', `A complete escape in ${state.moves} moves. Choose a difficulty for a new dungeon.`];
-    if (kind === 'escaped') return ['You escaped safely.', 'The dragon woke, but you made it back to the portal. Choose a difficulty for a new dungeon.'];
-    return ['The dragon got you.', 'The dungeon is different every time. Choose a difficulty and try again.'];
+    const nextSize = Math.min(16, state.grid_size + 1);
+    if (kind === 'won') return ['Treasure escape!', `Your streak is ${state.streak}. The next dungeon grows from ${state.grid_size}×${state.grid_size} to ${nextSize}×${nextSize}. Choose a mode to continue.`];
+    if (kind === 'escaped') return ['You escaped safely.', `You returned without the treasure, so your streak and next dungeon stay at ${state.grid_size}×${state.grid_size}. Choose a mode to continue.`];
+    return ['The dragon got you.', 'Your streak resets, so the next dungeon returns to 8×8. Inspect this dungeon or choose a mode to try again.'];
   }
-  function connect() { if (socket?.readyState === WebSocket.OPEN) return; socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`); socket.onmessage = event => { state = JSON.parse(event.data); status.textContent = state.hint; status.hidden = state.status === 'playing'; if (state.status !== 'playing' && !resultTimer) { const [title, copy] = resultCopy(state.status); resultTimer = setTimeout(() => { menuTitle.textContent = title; menuCopy.textContent = copy; menu.hidden = false; resultTimer = null; }, 2000); } draw(); }; socket.onclose = () => { status.hidden = false; status.textContent = 'Connection lost. Reload to reconnect.'; }; }
-  function start(difficulty) { clearTimeout(resultTimer); resultTimer = null; connect(); const begin = () => send({action:'start', difficulty}); if (socket.readyState === WebSocket.OPEN) begin(); else socket.addEventListener('open', begin, {once:true}); menu.hidden = true; }
+  function showResult() { if (!lastResult) return; menuTitle.textContent = lastResult.title; menuCopy.textContent = lastResult.copy; dismissResult.hidden = false; menu.hidden = false; nextButton.textContent = 'Results & next dungeon'; }
+  function showMainMenu() { lastResult = null; dismissResult.hidden = true; menuTitle.textContent = 'Dungeon Escape'; menuCopy.textContent = 'Find the treasure, evade the sleeping dragon, and return to the portal.'; menu.hidden = false; nextButton.textContent = 'Main menu'; }
+  function connect() { if (socket?.readyState === WebSocket.OPEN) return; socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`); socket.onmessage = event => { state = JSON.parse(event.data); status.textContent = state.hint; status.hidden = state.status === 'playing'; if (state.status !== 'playing' && !resultTimer) { const [title, copy] = resultCopy(state.status); lastResult = {title, copy}; resultTimer = setTimeout(() => { showResult(); resultTimer = null; }, 2000); } draw(); }; socket.onclose = () => { status.hidden = false; status.textContent = 'Connection lost. Reload to reconnect.'; }; }
+  function start(difficulty) { clearTimeout(resultTimer); resultTimer = null; lastResult = null; dismissResult.hidden = true; nextButton.textContent = 'Main menu'; connect(); const begin = () => send({action:'start', difficulty}); if (socket.readyState === WebSocket.OPEN) begin(); else socket.addEventListener('open', begin, {once:true}); menu.hidden = true; }
   function move(direction) { if (state?.status === 'playing') send({action:'move', direction}); }
   function has(items, x, y) { return items.some(item => item[0] === x && item[1] === y); }
   function sprite(name, x, y, size) { if (assets[name]) ctx.drawImage(assets[name], x, y, size, size); }
@@ -36,6 +39,7 @@
   }
   document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click',()=>start(button.dataset.mode)));
   document.querySelectorAll('[data-direction]').forEach(button => button.addEventListener('click',()=>move(button.dataset.direction)));
-  document.querySelector('#new-game').addEventListener('click',()=>{menuTitle.textContent='Dungeon Escape';menuCopy.textContent='Find the treasure, evade the sleeping dragon, and return to the portal.';menu.hidden=false;});
+  nextButton.addEventListener('click',()=>{ if (lastResult) showResult(); else showMainMenu(); });
+  dismissResult.addEventListener('click',()=>{ menu.hidden=true; });
   addEventListener('keydown',event=>{const direction=keys[event.key];if(direction){event.preventDefault();move(direction);}}); canvas.addEventListener('pointerdown',event=>{swipe=[event.clientX,event.clientY];}); canvas.addEventListener('pointerup',event=>{if(!swipe)return;const dx=event.clientX-swipe[0],dy=event.clientY-swipe[1];swipe=null;if(Math.max(Math.abs(dx),Math.abs(dy))>25)move(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));}); new ResizeObserver(resize).observe(canvas);
 })();
