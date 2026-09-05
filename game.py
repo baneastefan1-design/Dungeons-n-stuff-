@@ -16,7 +16,6 @@ import pygame
 
 from pathfinding import astar_path
 
-
 GRID_SIZE = 8
 TILE_SIZE = 56
 HUD_HEIGHT = 72
@@ -52,7 +51,9 @@ def statistics_file() -> Path:
         elif sys.platform == "win32":
             data_directory = Path(os.environ.get("APPDATA", Path.home()))
         else:
-            data_directory = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+            data_directory = Path(
+                os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")
+            )
         return data_directory / "Dungeon Escape" / "dungeon_stats.json"
     return Path(__file__).with_name("dungeon_stats.json")
 
@@ -81,6 +82,7 @@ SOUNDS: dict[str, pygame.mixer.Sound] = {}
 @dataclass
 class Statistics:
     """Lifetime results, saved beside the game so they survive restarts."""
+
     wins: int = 0
     dragon_wins: int = 0
     escapes: int = 0
@@ -129,10 +131,13 @@ def load_statistics() -> Statistics:
             total_win_moves=max(0, int(saved.get("total_win_moves", 0))),
             best_win_moves=(
                 max(0, int(saved["best_win_moves"]))
-                if saved.get("best_win_moves") is not None else None
+                if saved.get("best_win_moves") is not None
+                else None
             ),
             win_streak=max(0, int(saved.get("win_streak", 0))),
-            highest_win_streak=max(0, int(saved.get("highest_win_streak", saved.get("win_streak", 0)))),
+            highest_win_streak=max(
+                0, int(saved.get("highest_win_streak", saved.get("win_streak", 0)))
+            ),
         )
     except (OSError, ValueError, TypeError):
         return Statistics()
@@ -142,13 +147,19 @@ def save_statistics(statistics: Statistics) -> None:
     """Persist results without making a save failure interrupt the game."""
     try:
         STATS_FILE.parent.mkdir(parents=True, exist_ok=True)
-        STATS_FILE.write_text(json.dumps(statistics.__dict__, indent=2) + "\n", encoding="utf-8")
+        STATS_FILE.write_text(
+            json.dumps(statistics.__dict__, indent=2) + "\n", encoding="utf-8"
+        )
     except OSError:
         pass
 
 
 def record_result(
-    state: GameState, statistics: Statistics | None, status: str, *, persist: bool = True
+    state: GameState,
+    statistics: Statistics | None,
+    status: str,
+    *,
+    persist: bool = True,
 ) -> None:
     """Record each completed run once, including moves used for treasure wins."""
     state.status = status
@@ -158,7 +169,9 @@ def record_result(
     if status == "won":
         statistics.wins += 1
         statistics.win_streak += 1
-        statistics.highest_win_streak = max(statistics.highest_win_streak, statistics.win_streak)
+        statistics.highest_win_streak = max(
+            statistics.highest_win_streak, statistics.win_streak
+        )
         statistics.total_win_moves += state.moves
         if statistics.best_win_moves is None or state.moves < statistics.best_win_moves:
             statistics.best_win_moves = state.moves
@@ -171,7 +184,9 @@ def record_result(
         save_statistics(statistics)
 
 
-def configure_difficulty(statistics: Statistics, *, max_grid_size: int | None = None) -> None:
+def configure_difficulty(
+    statistics: Statistics, *, max_grid_size: int | None = None
+) -> None:
     """Scale a win streak into a larger dungeon that still fits the display."""
     global GRID_SIZE, TILE_SIZE, WALL_COUNT, EXTRA_WALLS, WIDTH, HEIGHT
 
@@ -193,8 +208,15 @@ def configure_difficulty(statistics: Statistics, *, max_grid_size: int | None = 
     # The active streak controls difficulty. A dragon win clears it and
     # restores the default grid, while the all-time high remains recorded.
     requested_size = min(MAX_GRID_SIZE, 8 + statistics.win_streak)
-    grid_size = min(requested_size, max_grid_size) if max_grid_size is not None else requested_size
-    while grid_size > 8 and min(max_width // grid_size, max_height // grid_size) < MIN_TILE_SIZE:
+    grid_size = (
+        min(requested_size, max_grid_size)
+        if max_grid_size is not None
+        else requested_size
+    )
+    while (
+        grid_size > 8
+        and min(max_width // grid_size, max_height // grid_size) < MIN_TILE_SIZE
+    ):
         grid_size -= 1
     TILE_SIZE = min(56, max_width // grid_size, max_height // grid_size)
     GRID_SIZE = grid_size
@@ -204,10 +226,14 @@ def configure_difficulty(statistics: Statistics, *, max_grid_size: int | None = 
     WALL_COUNT = 12 + (GRID_SIZE - 8) * 3
     # Web dungeons stop growing at a readable 13×13. Subsequent wins add
     # randomized barriers instead of shrinking the board's touch targets.
-    EXTRA_WALLS = 3 * max(0, requested_size - max_grid_size) if max_grid_size is not None else 0
+    EXTRA_WALLS = (
+        3 * max(0, requested_size - max_grid_size) if max_grid_size is not None else 0
+    )
 
 
-def make_sound(notes: list[tuple[float, float]], volume: float = 0.28) -> pygame.mixer.Sound | None:
+def make_sound(
+    notes: list[tuple[float, float]], volume: float = 0.28
+) -> pygame.mixer.Sound | None:
     """Build a short, dependency-free mono sound effect from sine-wave notes."""
     if not pygame.mixer.get_init():
         return None
@@ -246,7 +272,10 @@ def play_sound(name: str) -> None:
 
 
 def eat_player(
-    state: GameState, statistics: Statistics | None = None, *, persist_statistics: bool = True
+    state: GameState,
+    statistics: Statistics | None = None,
+    *,
+    persist_statistics: bool = True,
 ) -> None:
     """End the run with matching sound and screen-shake feedback."""
     record_result(state, statistics, "eaten", persist=persist_statistics)
@@ -278,13 +307,11 @@ def neighbours(state: GameState, pos: Position, diagonals: bool = False):
         if not (0 <= nxt[0] < GRID_SIZE and 0 <= nxt[1] < GRID_SIZE):
             continue
         if dx and dy:
-            horizontal_first = (
-                not edge_blocked(state, pos, (dx, 0))
-                and not edge_blocked(state, (x + dx, y), (0, dy))
-            )
-            vertical_first = (
-                not edge_blocked(state, pos, (0, dy))
-                and not edge_blocked(state, (x, y + dy), (dx, 0))
+            horizontal_first = not edge_blocked(
+                state, pos, (dx, 0)
+            ) and not edge_blocked(state, (x + dx, y), (0, dy))
+            vertical_first = not edge_blocked(state, pos, (0, dy)) and not edge_blocked(
+                state, (x, y + dy), (dx, 0)
             )
             # A wall on either side of the corner prevents a diagonal shortcut.
             if not (horizontal_first and vertical_first):
@@ -322,8 +349,12 @@ def make_game(hard_mode: bool = False, level: int = 1) -> GameState:
             for _ in range(WALL_COUNT)
         }
         for _ in range(EXTRA_WALLS):
-            state.horizontal_walls.add((random.randrange(GRID_SIZE), random.randrange(GRID_SIZE - 1)))
-            state.vertical_walls.add((random.randrange(GRID_SIZE - 1), random.randrange(GRID_SIZE)))
+            state.horizontal_walls.add(
+                (random.randrange(GRID_SIZE), random.randrange(GRID_SIZE - 1))
+            )
+            state.vertical_walls.add(
+                (random.randrange(GRID_SIZE - 1), random.randrange(GRID_SIZE))
+            )
         candidates = [
             (x, y)
             for x in range(GRID_SIZE)
@@ -332,8 +363,10 @@ def make_game(hard_mode: bool = False, level: int = 1) -> GameState:
         ]
         state.treasure = random.choice(candidates)
         dragon_candidates = [
-            p for p in candidates
-            if p != state.treasure and max(abs(p[0] - state.treasure[0]), abs(p[1] - state.treasure[1])) >= 2
+            p
+            for p in candidates
+            if p != state.treasure
+            and max(abs(p[0] - state.treasure[0]), abs(p[1] - state.treasure[1])) >= 2
         ]
         state.dragon = random.choice(dragon_candidates)
         if reachable(state, state.start, state.treasure):
@@ -366,12 +399,16 @@ def reveal_wall_to_dragon(state: GameState, pos: Position, delta: Position) -> N
     """Remember every wall blocking a dragon move without revealing it to the player."""
     x, y = pos
     dx, dy = delta
-    checks = [(pos, delta)] if not (dx and dy) else [
-        (pos, (dx, 0)),
-        ((x + dx, y), (0, dy)),
-        (pos, (0, dy)),
-        ((x, y + dy), (dx, 0)),
-    ]
+    checks = (
+        [(pos, delta)]
+        if not (dx and dy)
+        else [
+            (pos, (dx, 0)),
+            ((x + dx, y), (0, dy)),
+            (pos, (0, dy)),
+            ((x, y + dy), (dx, 0)),
+        ]
+    )
     for check_pos, check_delta in checks:
         if not edge_blocked(state, check_pos, check_delta):
             continue
@@ -453,13 +490,13 @@ def attempt_move(
     state.visited.add(state.player)
     state.moves += 1
     play_sound("step")
-    if state.player == state.dragon:
-        eat_player(state, statistics, persist_statistics=persist_statistics)
-        return
     if state.player == state.treasure and not state.has_treasure:
         state.has_treasure = True
         play_sound("treasure")
-        state.flash, state.flash_color = "Treasure claimed—get back to the portal!", GOLD
+        state.flash, state.flash_color = (
+            "Treasure claimed—get back to the portal!",
+            GOLD,
+        )
         state.flash_until = pygame.time.get_ticks() + 1600
         state.treasure_open_until = pygame.time.get_ticks() + 700
     if state.player == state.start:
@@ -470,8 +507,15 @@ def attempt_move(
         if state.dragon_awake:
             record_result(state, statistics, "escaped", persist=persist_statistics)
             return
+    # The portal resolves first: reaching it safely ends the run even if the
+    # dragon is occupying that same tile.
+    if state.player == state.dragon:
+        eat_player(state, statistics, persist_statistics=persist_statistics)
+        return
 
-    distance = max(abs(state.player[0] - state.dragon[0]), abs(state.player[1] - state.dragon[1]))
+    distance = max(
+        abs(state.player[0] - state.dragon[0]), abs(state.player[1] - state.dragon[1])
+    )
     if not state.dragon_awake and distance <= WAKE_DISTANCE:
         state.dragon_awake = True
         state.scorched.add(state.dragon)
@@ -486,4 +530,7 @@ def attempt_move(
 
 
 def cell_center(pos: Position) -> Position:
-    return (pos[0] * TILE_SIZE + TILE_SIZE // 2, HUD_HEIGHT + pos[1] * TILE_SIZE + TILE_SIZE // 2)
+    return (
+        pos[0] * TILE_SIZE + TILE_SIZE // 2,
+        HUD_HEIGHT + pos[1] * TILE_SIZE + TILE_SIZE // 2,
+    )
