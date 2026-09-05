@@ -3,7 +3,7 @@
   const menuTitle = document.querySelector('#menu-title'), menuCopy = document.querySelector('#menu-copy'), assets = {};
   const names = ['hero/idle','hero/walk','dragon/sleeping','dragon/awake','tiles/floor_1','tiles/floor_2','tiles/wall_horizontal','tiles/wall_vertical','portal','treasure_open','scorch','fog'];
   const keys = {ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right'};
-  let state = null, socket = null, swipe = null;
+  let state = null, socket = null, swipe = null, resultTimer = null;
   const load = name => new Promise(resolve => { const img = new Image(); img.src = `/assets/illustrated/${name}.png`; img.onload = () => { assets[name] = img; resolve(); }; img.onerror = resolve; });
   Promise.all(names.map(load)).then(resize);
   function send(value) { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(value)); }
@@ -12,8 +12,8 @@
     if (kind === 'escaped') return ['You escaped safely.', 'The dragon woke, but you made it back to the portal. Choose a difficulty for a new dungeon.'];
     return ['The dragon got you.', 'The dungeon is different every time. Choose a difficulty and try again.'];
   }
-  function connect() { if (socket?.readyState === WebSocket.OPEN) return; socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`); socket.onmessage = event => { state = JSON.parse(event.data); status.textContent = state.message; if (state.status !== 'playing') { const [title, copy] = resultCopy(state.status); menuTitle.textContent = title; menuCopy.textContent = copy; menu.hidden = false; } draw(); }; socket.onclose = () => { status.textContent = 'Connection lost. Reload to reconnect.'; }; }
-  function start(difficulty) { connect(); const begin = () => send({action:'start', difficulty}); if (socket.readyState === WebSocket.OPEN) begin(); else socket.addEventListener('open', begin, {once:true}); menu.hidden = true; }
+  function connect() { if (socket?.readyState === WebSocket.OPEN) return; socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`); socket.onmessage = event => { state = JSON.parse(event.data); status.textContent = state.hint; if (state.status !== 'playing' && !resultTimer) { const [title, copy] = resultCopy(state.status); resultTimer = setTimeout(() => { menuTitle.textContent = title; menuCopy.textContent = copy; menu.hidden = false; resultTimer = null; }, 2000); } draw(); }; socket.onclose = () => { status.textContent = 'Connection lost. Reload to reconnect.'; }; }
+  function start(difficulty) { clearTimeout(resultTimer); resultTimer = null; connect(); const begin = () => send({action:'start', difficulty}); if (socket.readyState === WebSocket.OPEN) begin(); else socket.addEventListener('open', begin, {once:true}); menu.hidden = true; }
   function move(direction) { if (state?.status === 'playing') send({action:'move', direction}); }
   function has(items, x, y) { return items.some(item => item[0] === x && item[1] === y); }
   function sprite(name, x, y, size) { if (assets[name]) ctx.drawImage(assets[name], x, y, size, size); }

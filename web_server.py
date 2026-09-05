@@ -28,6 +28,19 @@ def walls(values: set[game.Wall]) -> list[list[int]]:
 
 def serialise(state: game.GameState) -> dict[str, Any]:
     """Return only rendering data; all decisions remain in game.py."""
+    distance = max(abs(state.player[0] - state.dragon[0]), abs(state.player[1] - state.dragon[1]))
+    if state.status == "eaten":
+        hint = "DEVOURED · The dragon wins."
+    elif state.status == "won":
+        hint = "ESCAPED · Treasure secured."
+    elif state.status == "escaped":
+        hint = "ESCAPED · You reached the portal safely."
+    elif state.dragon_awake:
+        hint = "The dragon is hunting you!"
+    elif distance <= game.WAKE_DISTANCE + 1:
+        hint = "The air feels warm nearby…"
+    else:
+        hint = "The dungeon is quiet."
     return {
         "grid_size": game.GRID_SIZE,
         "player": position(state.player),
@@ -44,6 +57,7 @@ def serialise(state: game.GameState) -> dict[str, Any]:
         "hard_mode": state.hard_mode,
         "status": state.status,
         "message": state.flash,
+        "hint": hint,
     }
 
 
