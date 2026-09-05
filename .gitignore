@@ -19,3 +19,7 @@ assets/illustrated_detailed/
 
 # Local Codex workspace guidance
 AGENTS.md
+
+# Personal Laptop Server deployment configuration
+deploy_laptop_server.sh
+compose.laptop-server.yaml
