@@ -63,20 +63,8 @@
     localStorage.setItem("dungeon-escape-client-id", clientId);
   }
   usernameInput.value = localStorage.getItem("dungeon-escape-username") || "";
-  const mobileOverlays = [menu, rules];
-  const overlayHomes = new Map(mobileOverlays.map((overlay) => [overlay, overlay.parentElement]));
-  const compactMenu = matchMedia("(max-width: 600px)");
-  function placeMobileOverlays() {
-    for (const overlay of mobileOverlays) {
-      if (compactMenu.matches && overlay.parentElement !== document.body) {
-        document.body.append(overlay);
-      } else if (!compactMenu.matches && overlay.parentElement !== overlayHomes.get(overlay)) {
-        overlayHomes.get(overlay).append(overlay);
-      }
-    }
-  }
-  placeMobileOverlays();
-  compactMenu.addEventListener("change", placeMobileOverlays);
+  // Menus are viewport-level layers, never clipped by the square game board.
+  [menu, rules, leaderboard].forEach((overlay) => document.body.append(overlay));
   function setUsernameEditable(editable) {
     usernameInput.readOnly = !editable;
     usernameInput.setAttribute("aria-readonly", String(!editable));
