@@ -1,12 +1,8 @@
-# Build the Python/Pygame WebAssembly package, then serve it as static files.
-FROM python:3.12-slim AS build
-
-WORKDIR /game
-COPY requirements-web.txt .
-RUN pip install --no-cache-dir -r requirements-web.txt
-COPY . .
-RUN python -m pygbag --build --title "Dungeon Escape" .
-
 FROM nginx:1.27-alpine
-COPY --from=build /game/build/web /usr/share/nginx/html
+
+# The web edition is a dependency-free Canvas game, so the image has no build
+# step, Python runtime, or external CDN dependency.
+COPY web/ /usr/share/nginx/html/
+COPY favicon.png /usr/share/nginx/html/favicon.png
+
 EXPOSE 80

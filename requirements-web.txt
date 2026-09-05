@@ -1,2 +1,0 @@
-# Build the browser edition with Pygbag's pygame-ce WebAssembly runtime.
-pygbag>=0.9,<1
