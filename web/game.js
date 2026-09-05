@@ -3,7 +3,7 @@
   const menuTitle = document.querySelector('#menu-title'), menuCopy = document.querySelector('#menu-copy'), dismissResult = document.querySelector('#result-dismiss'), nextButton = document.querySelector('#new-game'), soundButton = document.querySelector('#sound-toggle'), assets = {};
   const names = ['hero/idle','hero/walk','dragon/sleeping','dragon/awake','tiles/floor_1','tiles/floor_2','tiles/wall_horizontal','tiles/wall_vertical','portal','treasure_open','scorch','fog'];
   const keys = {ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right'};
-  let state = null, socket = null, swipe = null, resultTimer = null, lastResult = null, audioContext = null;
+  let state = null, socket = null, swipe = null, resultTimer = null, lastResult = null, wakeUntil = 0, audioContext = null;
   let muted = localStorage.getItem('dungeon-escape-muted') === 'true';
   const load = name => new Promise(resolve => { const img = new Image(); img.src = `/assets/illustrated/${name}.png`; img.onload = () => { assets[name] = img; resolve(); }; img.onerror = resolve; });
   Promise.all(names.map(load)).then(resize);
@@ -25,7 +25,7 @@
     if (previous.status === 'playing' && next.status !== 'playing') { cue(next.status === 'eaten' ? 'lose' : 'win'); return; }
     if (previous.status !== 'playing' || next.status !== 'playing') return;
     if (previous.player[0] === next.player[0] && previous.player[1] === next.player[1]) { cue('bump'); return; }
-    cue('step'); if (!previous.has_treasure && next.has_treasure) cue('treasure'); if (!previous.dragon_awake && next.dragon_awake) cue('growl');
+    cue('step'); if (!previous.has_treasure && next.has_treasure) cue('treasure'); if (!previous.dragon_awake && next.dragon_awake) { cue('growl'); wakeUntil = performance.now() + 1450; navigator.vibrate?.([70, 45, 160]); const animateWake = () => { draw(); if (performance.now() < wakeUntil) requestAnimationFrame(animateWake); }; requestAnimationFrame(animateWake); }
   }
   updateSoundButton();
   function send(value) { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(value)); }
@@ -58,6 +58,7 @@
     const thick=Math.max(5,tile*.18); for(const [x,y] of state.horizontal_walls) if(assets['tiles/wall_horizontal']) ctx.drawImage(assets['tiles/wall_horizontal'],left+x*tile,top+(y+1)*tile-thick/2,tile,thick); for(const [x,y] of state.vertical_walls) if(assets['tiles/wall_vertical']) ctx.drawImage(assets['tiles/wall_vertical'],left+(x+1)*tile-thick/2,top+y*tile,thick,tile);
     if (state.has_treasure) { const x=left+(state.treasure[0]+.5)*tile, y=top+(state.treasure[1]+.5)*tile, size=tile*.18; ctx.strokeStyle='#ef5965'; ctx.lineWidth=Math.max(3,tile*.07); ctx.beginPath(); ctx.moveTo(x-size,y-size); ctx.lineTo(x+size,y+size); ctx.moveTo(x+size,y-size); ctx.lineTo(x-size,y+size); ctx.stroke(); }
     sprite(state.moves%2?'hero/walk':'hero/idle',left+state.player[0]*tile,top+state.player[1]*tile,tile);
+    if (performance.now() < wakeUntil) { const pulse=(Math.sin(performance.now()/55)+1)/2, dragonX=left+(state.dragon[0]+.5)*tile, dragonY=top+(state.dragon[1]+.5)*tile; const glow=ctx.createRadialGradient(dragonX,dragonY,tile*.1,dragonX,dragonY,board*.7); glow.addColorStop(0,`rgba(255,55,35,${.5+pulse*.22})`); glow.addColorStop(1,'rgba(70,0,5,0)'); ctx.fillStyle=glow; ctx.fillRect(left,top,board,board); ctx.fillStyle=`rgba(20,0,5,${.22+pulse*.14})`; ctx.fillRect(left,top,board,board); ctx.textAlign='center'; ctx.fillStyle='#ffcf4f'; ctx.font=`900 ${Math.max(22,tile*.56)}px system-ui`; ctx.fillText('THE DRAGON AWAKENS',left+board/2,top+board*.46); ctx.fillStyle='#fff1d4'; ctx.font=`800 ${Math.max(14,tile*.27)}px system-ui`; ctx.fillText('RUN!',left+board/2,top+board*.53); }
   }
   document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click',()=>start(button.dataset.mode)));
   document.querySelectorAll('[data-direction]').forEach(button => button.addEventListener('click',()=>move(button.dataset.direction)));
