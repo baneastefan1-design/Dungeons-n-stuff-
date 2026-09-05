@@ -2,61 +2,172 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <meta name="theme-color" content="#111827" />
     <meta name="description" content="A touch-friendly dungeon escape game." />
     <link rel="icon" href="/static/favicon.png" />
     <link rel="manifest" href="/static/manifest.webmanifest" />
-    <link rel="stylesheet" href="/static/styles.css" />
-    <link rel="stylesheet" href="/static/desktop-controls.css" />
-    <link rel="stylesheet" href="/static/two-difficulties.css" />
-    <link rel="stylesheet" href="/static/sound-controls.css" />
-    <link rel="stylesheet" href="/static/player-profile.css" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260905-2" />
+    <link rel="stylesheet" href="/static/desktop-controls.css?v=20260905-2" />
+    <link rel="stylesheet" href="/static/two-difficulties.css?v=20260905-2" />
+    <link rel="stylesheet" href="/static/sound-controls.css?v=20260905-2" />
+    <link rel="stylesheet" href="/static/player-profile.css?v=20260905-2" />
     <title>Dungeon Escape</title>
   </head>
   <body>
     <main class="app-shell">
       <header>
-        <div><p class="eyebrow">DUNGEON ESCAPE · ILLUSTRATED WEB EDITION</p><h1>Find the treasure. Escape the dragon.</h1></div>
+        <div>
+          <p class="eyebrow">DUNGEON ESCAPE · ILLUSTRATED WEB EDITION</p>
+          <h1>Find the treasure. Escape the dragon.</h1>
+        </div>
         <div class="header-actions">
-          <button id="profile-toggle" class="quiet-button" type="button">Change player</button>
-          <button id="leaderboard-toggle" class="quiet-button" type="button">Rankings</button>
-          <button id="sound-toggle" class="quiet-button" type="button" aria-pressed="true">Sound: on</button>
-          <button id="new-game" class="quiet-button" type="button">Main menu</button>
+          <button id="profile-toggle" class="quiet-button" type="button">
+            Change player
+          </button>
+          <button id="leaderboard-toggle" class="quiet-button" type="button">
+            Rankings
+          </button>
+          <button
+            id="sound-toggle"
+            class="quiet-button"
+            type="button"
+            aria-pressed="true"
+          >
+            Sound: on
+          </button>
+          <button id="new-game" class="quiet-button" type="button">
+            Main menu
+          </button>
         </div>
       </header>
       <section class="game-panel" aria-label="Dungeon game">
         <canvas id="game" aria-label="Dungeon Escape game board"></canvas>
-        <div id="menu" class="overlay"><div class="dialog">
-          <p class="eyebrow">CHOOSE YOUR RISK</p><h2 id="menu-title">Dungeon Escape</h2>
-          <p id="menu-copy">Find the treasure, evade the sleeping dragon, and return to the portal.</p>
-          <label class="name-field" for="username">Explorer name
-            <input id="username" name="username" type="text" maxlength="24" autocomplete="nickname" placeholder="Enter a username" required />
-          </label>
-          <label id="debug-level-field" class="name-field" for="debug-level" hidden>Debug level
-            <input id="debug-level" name="debug-level" type="number" min="1" max="10" value="1" inputmode="numeric" />
-          </label>
-          <div class="difficulty-row">
-            <button data-mode="normal" type="button"><strong>Normal</strong><span>Dragon learns the maze</span></button>
-            <button data-mode="hard" type="button"><strong>Hard</strong><span>Dragon knows every wall</span></button>
+        <div id="menu" class="overlay">
+          <div class="dialog">
+            <p class="eyebrow">CHOOSE YOUR RISK</p>
+            <h2 id="menu-title">Dungeon Escape</h2>
+            <p id="menu-copy">
+              Find the treasure, evade the sleeping dragon, and return to the
+              portal.
+            </p>
+            <label class="name-field" for="username"
+              >Explorer name
+              <input
+                id="username"
+                name="username"
+                type="text"
+                maxlength="24"
+                autocomplete="nickname"
+                placeholder="Enter a username"
+                required
+              />
+            </label>
+            <label
+              id="debug-level-field"
+              class="name-field"
+              for="debug-level"
+              hidden
+              >Debug level
+              <input
+                id="debug-level"
+                name="debug-level"
+                type="number"
+                min="1"
+                max="10"
+                value="1"
+                inputmode="numeric"
+              />
+            </label>
+            <div class="difficulty-row">
+              <button data-mode="normal" type="button">
+                <strong>Normal</strong><span>Dragon learns the maze</span>
+              </button>
+              <button data-mode="hard" type="button">
+                <strong>Hard</strong><span>Dragon knows every wall</span>
+              </button>
+            </div>
+            <button
+              id="result-dismiss"
+              class="quiet-button"
+              type="button"
+              hidden
+            >
+              Inspect this dungeon
+            </button>
+            <p class="hint">
+              Levels 1–6 grow from 8×8 to 13×13. Level 7 adds randomized walls;
+              Level 10 gives the dragon Hard instincts. Use arrow keys, WASD, or
+              touch controls.
+            </p>
           </div>
-          <button id="result-dismiss" class="quiet-button" type="button" hidden>Inspect this dungeon</button>
-          <p class="hint">Levels 1–6 grow from 8×8 to 13×13. Level 7 adds randomized walls; Level 10 gives the dragon Hard instincts. Use arrow keys, WASD, or touch controls.</p>
-        </div></div>
-        <div id="leaderboard" class="overlay" hidden><div class="dialog leaderboard-dialog">
-          <p class="eyebrow">SERVER RANKINGS</p><h2>Hall of Escape</h2>
-          <p>Ranked by treasure escapes, then best streak.</p>
-          <div class="ranking-table-wrap"><table><thead><tr><th>#</th><th>Explorer</th><th>Wins</th><th>Best moves</th><th>Streak</th></tr></thead><tbody id="leaderboard-body"></tbody></table></div>
-          <button id="leaderboard-close" class="quiet-button" type="button">Close rankings</button>
-        </div></div>
+        </div>
+        <div id="leaderboard" class="overlay" hidden>
+          <div class="dialog leaderboard-dialog">
+            <p class="eyebrow">SERVER RANKINGS</p>
+            <h2>Hall of Escape</h2>
+            <p>Ranked by treasure escapes, then best streak.</p>
+            <div class="ranking-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Explorer</th>
+                    <th>Wins</th>
+                    <th>Best moves</th>
+                    <th>Streak</th>
+                  </tr>
+                </thead>
+                <tbody id="leaderboard-body"></tbody>
+              </table>
+            </div>
+            <button id="leaderboard-close" class="quiet-button" type="button">
+              Close rankings
+            </button>
+          </div>
+        </div>
       </section>
       <section class="controls" aria-label="Movement controls">
-        <button class="move up" data-direction="up" type="button" aria-label="Move up">▲</button>
-        <button class="move left" data-direction="left" type="button" aria-label="Move left">◀</button>
-        <button class="move down" data-direction="down" type="button" aria-label="Move down">▼</button>
-        <button class="move right" data-direction="right" type="button" aria-label="Move right">▶</button>
+        <button
+          class="move up"
+          data-direction="up"
+          type="button"
+          aria-label="Move up"
+        >
+          ▲
+        </button>
+        <button
+          class="move left"
+          data-direction="left"
+          type="button"
+          aria-label="Move left"
+        >
+          ◀
+        </button>
+        <button
+          class="move down"
+          data-direction="down"
+          type="button"
+          aria-label="Move down"
+        >
+          ▼
+        </button>
+        <button
+          class="move right"
+          data-direction="right"
+          type="button"
+          aria-label="Move right"
+        >
+          ▶
+        </button>
       </section>
-      <p id="status" class="status" role="status">Choose a difficulty to begin.</p>
-    </main><script src="/static/game.js"></script>
+      <p id="status" class="status" role="status">
+        Choose a difficulty to begin.
+      </p>
+    </main>
+    <script src="/static/game.js?v=20260905-2"></script>
   </body>
 </html>
