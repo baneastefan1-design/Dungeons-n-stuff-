@@ -5,27 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111827" />
     <meta name="description" content="A touch-friendly dungeon escape game." />
-    <link rel="icon" href="/favicon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" href="/static/favicon.png" />
+    <link rel="manifest" href="/static/manifest.webmanifest" />
+    <link rel="stylesheet" href="/static/styles.css" />
     <title>Dungeon Escape</title>
   </head>
   <body>
     <main class="app-shell">
       <header>
-        <div><p class="eyebrow">DUNGEON ESCAPE · WEB 2.0</p><h1>Take the treasure. Escape the dragon.</h1></div>
-        <button id="new-game" class="quiet-button" type="button">New dungeon</button>
+        <div><p class="eyebrow">DUNGEON ESCAPE · ILLUSTRATED WEB EDITION</p><h1>Find the treasure. Escape the dragon.</h1></div>
+        <button id="new-game" class="quiet-button" type="button">Main menu</button>
       </header>
       <section class="game-panel" aria-label="Dungeon game">
         <canvas id="game" aria-label="Dungeon Escape game board"></canvas>
         <div id="menu" class="overlay"><div class="dialog">
           <p class="eyebrow">CHOOSE YOUR RISK</p><h2 id="menu-title">Dungeon Escape</h2>
-          <p id="menu-copy">Find the gold, then return to the portal. The dragon hunts once it wakes.</p>
+          <p id="menu-copy">Find the treasure, evade the sleeping dragon, and return to the portal.</p>
           <div class="difficulty-row">
             <button data-mode="calm" type="button"><strong>Calm</strong><span>Dragon moves slowly</span></button>
             <button data-mode="normal" type="button"><strong>Normal</strong><span>A fair chase</span></button>
             <button data-mode="hard" type="button"><strong>Hard</strong><span>Dragon moves every turn</span></button>
-          </div><p class="hint">Use arrow keys, WASD, or the touch controls.</p>
+          </div><p class="hint">The original Python rules run on the server. Use arrow keys, WASD, or touch controls.</p>
         </div></div>
       </section>
       <section class="controls" aria-label="Movement controls">
@@ -35,6 +35,6 @@
         <button class="move right" data-direction="right" type="button" aria-label="Move right">▶</button>
       </section>
       <p id="status" class="status" role="status">Choose a difficulty to begin.</p>
-    </main><script src="/game.js"></script>
+    </main><script src="/static/game.js"></script>
   </body>
 </html>

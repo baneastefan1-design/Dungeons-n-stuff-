@@ -1,8 +1,12 @@
-FROM nginx:1.27-alpine
+FROM python:3.12-slim
 
-# The web edition is a dependency-free Canvas game, so the image has no build
-# step, Python runtime, or external CDN dependency.
-COPY web/ /usr/share/nginx/html/
-COPY favicon.png /usr/share/nginx/html/favicon.png
+WORKDIR /app
+COPY requirements-server.txt .
+RUN pip install --no-cache-dir -r requirements-server.txt
+COPY game.py pathfinding.py web_server.py ./
+COPY assets ./assets
+COPY favicon.png ./web/favicon.png
+COPY web ./web
 
-EXPOSE 80
+EXPOSE 8080
+CMD ["uvicorn", "web_server:app", "--host", "0.0.0.0", "--port", "8080"]

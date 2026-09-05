@@ -25,5 +25,5 @@ description = "Check all game modules for syntax errors"
 run = "python -m py_compile dungeon_improved.py main.py game.py pathfinding.py rendering.py asset_manager.py"
 
 [tasks.web-build]
-description = "Build and start the browser-native Docker edition"
+description = "Build and start the illustrated Python-backed Docker edition"
 run = "docker compose up --build"

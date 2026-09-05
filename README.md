@@ -47,13 +47,13 @@ Run `build_windows.bat` on a Windows machine to create `dist\DungeonEscape.exe`,
 
 ### Browser / Docker (2.0)
 
-Build and host the browser-native edition with Docker:
+Build and host the illustrated browser edition with Docker:
 
 ```bash
 docker compose up --build
 ```
 
-Open `http://localhost:8080` on a computer or phone on the same network (replace `localhost` with the host computer's LAN address for a phone). This edition uses an HTML Canvas game engine rather than Pygame/WebAssembly, so it has no browser Python runtime or CDN dependency. It supports keyboard controls, touch buttons, and swipes; wins and best move count are stored in the browser.
+Open `http://localhost:8080` on a computer or phone on the same network (replace `localhost` with the host computer's LAN address for a phone). The browser draws the included illustrated artwork in an HTML Canvas, while a Python WebSocket service runs the existing `game.py` maze, movement, wall-discovery, treasure, and dragon rules. It supports keyboard controls, touch buttons, and swipes.
 
 ## Run the Game
 
