@@ -376,6 +376,7 @@ def make_game(
     wall_count: int | None = None,
     extra_walls: int | None = None,
     hearts: int = 3,
+    force_heart: bool = False,
 ) -> GameState:
     """Generate a map whose treasure is reachable from the entrance."""
     while True:
@@ -438,7 +439,7 @@ def make_game(
             # A heart is a deliberate risk: it is placed precisely on the
             # dragon's wake boundary, so reaching it wakes the dragon. It is
             # only banked for the following run after a return to the portal.
-            if hearts < 3 and random.random() < 0.10:
+            if hearts < 3 and (force_heart or random.random() < 0.10):
                 heart_candidates = [
                     (x, y)
                     for x in range(state.grid_size)

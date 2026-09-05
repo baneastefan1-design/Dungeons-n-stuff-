@@ -287,6 +287,7 @@ async def game_socket(websocket: WebSocket) -> None:
                     statistics = game.Statistics(
                         win_streak=requested_level - 1,
                         highest_win_streak=requested_level - 1,
+                        hearts=2,
                     )
                     username = selected_name
                 elif selected_name != username:
@@ -301,6 +302,7 @@ async def game_socket(websocket: WebSocket) -> None:
                     wall_count=wall_count,
                     extra_walls=extra_walls,
                     hearts=statistics.hearts,
+                    force_heart=debug_mode,
                 )
                 phantom = make_phantom(state) if debug_mode else None
             elif action == "move" and state is not None:
@@ -327,6 +329,7 @@ async def game_socket(websocket: WebSocket) -> None:
                     wall_count=wall_count,
                     extra_walls=extra_walls,
                     hearts=statistics.hearts,
+                    force_heart=debug_mode,
                 )
                 phantom = make_phantom(state) if debug_mode else None
             if state is not None:

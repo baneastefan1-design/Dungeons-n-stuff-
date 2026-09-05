@@ -54,3 +54,9 @@ def test_spawned_heart_sits_on_the_dragon_wake_boundary(monkeypatch) -> None:
         abs(state.heart[0] - state.dragon[0]),
         abs(state.heart[1] - state.dragon[1]),
     ) == game.WAKE_DISTANCE
+
+
+def test_debug_can_force_a_heart_spawn() -> None:
+    state = game.make_game(hearts=2, force_heart=True)
+
+    assert state.heart is not None
