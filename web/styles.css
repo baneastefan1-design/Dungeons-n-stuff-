@@ -190,7 +190,7 @@ canvas {
     margin-top: 16px;
   }
 }
-@media (max-width: 430px) {
+@media (max-width: 600px) {
   .app-shell {
     padding-left: 12px;
     padding-right: 12px;

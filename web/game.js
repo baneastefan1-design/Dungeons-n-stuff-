@@ -59,7 +59,7 @@
   }
   usernameInput.value = localStorage.getItem("dungeon-escape-username") || "";
   const menuHome = menu.parentElement;
-  const compactMenu = matchMedia("(max-width: 430px)");
+  const compactMenu = matchMedia("(max-width: 600px)");
   function placeMobileMenu() {
     if (compactMenu.matches && menu.parentElement !== document.body) {
       document.body.append(menu);
