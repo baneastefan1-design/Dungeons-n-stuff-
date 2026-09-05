@@ -104,6 +104,7 @@ class GameState:
     dragon_discovered_h: set[Wall] = field(default_factory=set)
     dragon_discovered_v: set[Wall] = field(default_factory=set)
     hard_mode: bool = False
+    level: int = 1
     scorched: set[Position] = field(default_factory=set)
     moves: int = 0
     has_treasure: bool = False
@@ -146,7 +147,9 @@ def save_statistics(statistics: Statistics) -> None:
         pass
 
 
-def record_result(state: GameState, statistics: Statistics | None, status: str) -> None:
+def record_result(
+    state: GameState, statistics: Statistics | None, status: str, *, persist: bool = True
+) -> None:
     """Record each completed run once, including moves used for treasure wins."""
     state.status = status
     if statistics is None or state.result_recorded:
@@ -164,7 +167,8 @@ def record_result(state: GameState, statistics: Statistics | None, status: str) 
         statistics.win_streak = 0
     elif status == "escaped":
         statistics.escapes += 1
-    save_statistics(statistics)
+    if persist:
+        save_statistics(statistics)
 
 
 def configure_difficulty(statistics: Statistics, *, max_grid_size: int | None = None) -> None:
@@ -241,9 +245,11 @@ def play_sound(name: str) -> None:
         sound.play()
 
 
-def eat_player(state: GameState, statistics: Statistics | None = None) -> None:
+def eat_player(
+    state: GameState, statistics: Statistics | None = None, *, persist_statistics: bool = True
+) -> None:
     """End the run with matching sound and screen-shake feedback."""
-    record_result(state, statistics, "eaten")
+    record_result(state, statistics, "eaten", persist=persist_statistics)
     state.shake_until = pygame.time.get_ticks() + 450
     play_sound("lose")
 
@@ -302,10 +308,10 @@ def reachable(state: GameState, start: Position, goal: Position) -> bool:
     return False
 
 
-def make_game(hard_mode: bool = False) -> GameState:
+def make_game(hard_mode: bool = False, level: int = 1) -> GameState:
     """Generate a map whose treasure is reachable from the entrance."""
     while True:
-        state = GameState(hard_mode=hard_mode)
+        state = GameState(hard_mode=hard_mode, level=level)
         state.visited.add(state.start)
         state.horizontal_walls = {
             (random.randrange(GRID_SIZE), random.randrange(GRID_SIZE - 1))
@@ -419,7 +425,13 @@ def dragon_step(state: GameState) -> None:
         return
 
 
-def attempt_move(state: GameState, delta: Position, statistics: Statistics | None = None) -> None:
+def attempt_move(
+    state: GameState,
+    delta: Position,
+    statistics: Statistics | None = None,
+    *,
+    persist_statistics: bool = True,
+) -> None:
     if state.status != "playing":
         return
     x, y = state.player
@@ -442,7 +454,7 @@ def attempt_move(state: GameState, delta: Position, statistics: Statistics | Non
     state.moves += 1
     play_sound("step")
     if state.player == state.dragon:
-        eat_player(state, statistics)
+        eat_player(state, statistics, persist_statistics=persist_statistics)
         return
     if state.player == state.treasure and not state.has_treasure:
         state.has_treasure = True
@@ -452,11 +464,11 @@ def attempt_move(state: GameState, delta: Position, statistics: Statistics | Non
         state.treasure_open_until = pygame.time.get_ticks() + 700
     if state.player == state.start:
         if state.has_treasure:
-            record_result(state, statistics, "won")
+            record_result(state, statistics, "won", persist=persist_statistics)
             play_sound("win")
             return
         if state.dragon_awake:
-            record_result(state, statistics, "escaped")
+            record_result(state, statistics, "escaped", persist=persist_statistics)
             return
 
     distance = max(abs(state.player[0] - state.dragon[0]), abs(state.player[1] - state.dragon[1]))
@@ -470,7 +482,7 @@ def attempt_move(state: GameState, delta: Position, statistics: Statistics | Non
     if state.dragon_awake:
         dragon_step(state)
         if state.dragon == state.player:
-            eat_player(state, statistics)
+            eat_player(state, statistics, persist_statistics=persist_statistics)
 
 
 def cell_center(pos: Position) -> Position:

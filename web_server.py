@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from copy import deepcopy
 from pathlib import Path
 import sqlite3
 from typing import Any
@@ -136,7 +137,13 @@ def walls(values: set[game.Wall]) -> list[list[int]]:
     return [list(value) for value in values]
 
 
-def serialise(state: game.GameState, statistics: game.Statistics) -> dict[str, Any]:
+def serialise(
+    state: game.GameState,
+    statistics: game.Statistics,
+    *,
+    debug: bool = False,
+    phantom: game.GameState | None = None,
+) -> dict[str, Any]:
     """Return only rendering data; all decisions remain in game.py."""
     distance = max(abs(state.player[0] - state.dragon[0]), abs(state.player[1] - state.dragon[1]))
     if state.status == "eaten":
@@ -153,17 +160,18 @@ def serialise(state: game.GameState, statistics: game.Statistics) -> dict[str, A
         hint = "The dungeon is quiet."
     return {
         "grid_size": game.GRID_SIZE,
-        "virtual_size": min(game.MAX_GRID_SIZE, 8 + statistics.win_streak),
-        "fortification_level": max(0, min(game.MAX_GRID_SIZE, 8 + statistics.win_streak) - 13),
-        "forced_hard": statistics.win_streak >= 7,
+        "level": state.level,
+        "next_level": statistics.win_streak + 1,
+        "fortification_level": max(0, state.level - 6),
+        "forced_hard": state.level >= 8,
         "streak": statistics.win_streak,
         "player": position(state.player),
         "start": position(state.start),
         "treasure": position(state.treasure),
         "dragon": position(state.dragon),
         "visited": [position(value) for value in state.visited],
-        "horizontal_walls": walls(state.horizontal_walls if state.status != "playing" else state.discovered_h),
-        "vertical_walls": walls(state.vertical_walls if state.status != "playing" else state.discovered_v),
+        "horizontal_walls": walls(state.horizontal_walls if debug or state.status != "playing" else state.discovered_h),
+        "vertical_walls": walls(state.vertical_walls if debug or state.status != "playing" else state.discovered_v),
         "scorched": [position(value) for value in state.scorched],
         "moves": state.moves,
         "has_treasure": state.has_treasure,
@@ -172,11 +180,23 @@ def serialise(state: game.GameState, statistics: game.Statistics) -> dict[str, A
         "status": state.status,
         "message": state.flash,
         "hint": hint,
+        "debug": debug,
+        "phantom": (
+            {"position": position(phantom.dragon), "hard_mode": phantom.hard_mode}
+            if phantom is not None and phantom.dragon_awake
+            else None
+        ),
     }
 
 
 @app.get("/")
 async def index() -> FileResponse:
+    return FileResponse(ROOT / "web" / "index.html")
+
+
+@app.get("/debug")
+async def debug_index() -> FileResponse:
+    """Serve the debug client; debug-only controls are enabled by its URL."""
     return FileResponse(ROOT / "web" / "index.html")
 
 
@@ -197,7 +217,9 @@ async def leaderboard() -> JSONResponse:
 @app.websocket("/ws")
 async def game_socket(websocket: WebSocket) -> None:
     await websocket.accept()
+    debug_mode = websocket.query_params.get("debug") == "1"
     state: game.GameState | None = None
+    phantom: game.GameState | None = None
     statistics = game.Statistics()
     username: str | None = None
     moves = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
@@ -208,29 +230,65 @@ async def game_socket(websocket: WebSocket) -> None:
             if action == "start":
                 selected_name = player_name(message.get("username"))
                 client_id = client_identifier(message.get("client_id"))
-                if selected_name is None or client_id is None:
+                if selected_name is None or (not debug_mode and client_id is None):
                     await websocket.send_json({"error": "Enter a username between 1 and 24 characters."})
                     continue
-                if not allow_username(selected_name, client_id):
+                if not debug_mode and not allow_username(selected_name, client_id):
                     await websocket.send_json({"error": "You can change username only twice per day."})
                     continue
-                if selected_name != username:
+                if debug_mode:
+                    requested_level = message.get("level", 1)
+                    if not isinstance(requested_level, int) or isinstance(requested_level, bool):
+                        requested_level = 1
+                    requested_level = max(1, min(game.MAX_GRID_SIZE - 7, requested_level))
+                    statistics = game.Statistics(
+                        win_streak=requested_level - 1,
+                        highest_win_streak=requested_level - 1,
+                    )
+                    username = selected_name
+                elif selected_name != username:
                     username = selected_name
                     statistics = load_player(username)
                 game.configure_difficulty(statistics, max_grid_size=13)
                 state = game.make_game(
-                    hard_mode=message.get("difficulty") == "hard" or statistics.win_streak >= 7
+                    hard_mode=message.get("difficulty") == "hard" or statistics.win_streak >= 7,
+                    level=statistics.win_streak + 1,
                 )
+                phantom = make_phantom(state) if debug_mode else None
             elif action == "move" and state is not None:
                 delta = moves.get(message.get("direction"))
                 if delta is not None:
-                    game.attempt_move(state, delta, statistics)
-                    if state.status != "playing" and username is not None:
+                    previous_player = state.player
+                    game.attempt_move(state, delta, statistics, persist_statistics=not debug_mode)
+                    if phantom is not None and state.player != previous_player:
+                        advance_phantom(phantom, state.player)
+                    if not debug_mode and state.status != "playing" and username is not None:
                         save_player(username, statistics)
             elif action == "restart" and state is not None:
                 game.configure_difficulty(statistics, max_grid_size=13)
-                state = game.make_game(hard_mode=state.hard_mode)
+                state = game.make_game(hard_mode=state.hard_mode, level=statistics.win_streak + 1)
+                phantom = make_phantom(state) if debug_mode else None
             if state is not None:
-                await websocket.send_json(serialise(state, statistics))
+                await websocket.send_json(serialise(state, statistics, debug=debug_mode, phantom=phantom))
     except WebSocketDisconnect:
         return
+
+
+def make_phantom(state: game.GameState) -> game.GameState:
+    """Create the opposite dragon mode for browser debug comparisons."""
+    phantom = deepcopy(state)
+    phantom.hard_mode = not state.hard_mode
+    phantom.dragon_discovered_h.clear()
+    phantom.dragon_discovered_v.clear()
+    return phantom
+
+
+def advance_phantom(phantom: game.GameState, player: game.Position) -> None:
+    """Advance the debug comparison dragon without touching the real state."""
+    phantom.player = player
+    distance = max(abs(player[0] - phantom.dragon[0]), abs(player[1] - phantom.dragon[1]))
+    if not phantom.dragon_awake and distance <= game.WAKE_DISTANCE:
+        phantom.dragon_awake = True
+        phantom.scorched.add(phantom.dragon)
+    elif phantom.dragon_awake:
+        game.dragon_step(phantom)
