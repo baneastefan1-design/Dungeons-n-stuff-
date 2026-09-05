@@ -163,7 +163,7 @@ def serialise(
         "level": state.level,
         "next_level": statistics.win_streak + 1,
         "fortification_level": max(0, state.level - 6),
-        "forced_hard": state.level >= 8,
+        "forced_hard": state.level >= 10,
         "streak": statistics.win_streak,
         "player": position(state.player),
         "start": position(state.start),
@@ -240,7 +240,7 @@ async def game_socket(websocket: WebSocket) -> None:
                     requested_level = message.get("level", 1)
                     if not isinstance(requested_level, int) or isinstance(requested_level, bool):
                         requested_level = 1
-                    requested_level = max(1, min(game.MAX_GRID_SIZE - 7, requested_level))
+                    requested_level = max(1, min(10, requested_level))
                     statistics = game.Statistics(
                         win_streak=requested_level - 1,
                         highest_win_streak=requested_level - 1,
@@ -251,7 +251,7 @@ async def game_socket(websocket: WebSocket) -> None:
                     statistics = load_player(username)
                 game.configure_difficulty(statistics, max_grid_size=13)
                 state = game.make_game(
-                    hard_mode=message.get("difficulty") == "hard" or statistics.win_streak >= 7,
+                    hard_mode=message.get("difficulty") == "hard" or statistics.win_streak >= 9,
                     level=statistics.win_streak + 1,
                 )
                 phantom = make_phantom(state) if debug_mode else None

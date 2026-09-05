@@ -37,7 +37,8 @@
   function resultCopy(kind) {
     if (kind === 'won' && state.level < 6) return ['Treasure escape!', `Level ${state.next_level} unlocked: the next dungeon grows from ${state.grid_size}×${state.grid_size} to ${state.grid_size + 1}×${state.grid_size + 1}. Choose a mode to continue.`];
     if (kind === 'won' && state.next_level === 7) return ['Treasure escape!', 'Level 7 unlocked: the board stays at a readable 13×13, but randomized walls and dead ends now fortify the dungeon.'];
-    if (kind === 'won' && state.next_level >= 8) return ['Treasure escape!', `Level ${state.next_level} unlocked: 13×13 remains the size, fortification increases, and the dragon now knows every wall — Hard instincts are active.`];
+    if (kind === 'won' && state.next_level < 10) return ['Treasure escape!', `Level ${state.next_level} unlocked: the board stays at 13×13 and the dungeon remains fortified with randomized walls and dead ends.`];
+    if (kind === 'won') return ['Treasure escape!', `Level ${state.next_level} unlocked: 13×13 remains the size, fortification increases, and the dragon now knows every wall — Hard instincts are active.`];
     if (kind === 'escaped') return ['You escaped safely.', `You returned without treasure, so you remain on Level ${state.level}. Choose a mode to continue.`];
     return ['The dragon got you.', 'The next run returns to Level 1: an 8×8 dungeon. Inspect this dungeon or choose a mode to try again.'];
   }
