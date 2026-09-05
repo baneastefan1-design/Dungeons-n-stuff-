@@ -44,6 +44,9 @@
     D: "right",
   };
   const debugMode = location.pathname.replace(/\/+$/, "") === "/debug";
+  const debugLog = (...values) => {
+    if (debugMode) console.info("[Dungeon debug]", ...values);
+  };
   let state = null,
     socket = null,
     swipe = null,
@@ -186,8 +189,10 @@
   }
   updateSoundButton();
   function send(value) {
-    if (socket?.readyState === WebSocket.OPEN)
+    if (socket?.readyState === WebSocket.OPEN) {
+      debugLog("send", value);
       socket.send(JSON.stringify(value));
+    }
   }
   function resultCopy(kind) {
     if (kind === "won" && state.level < 6)
@@ -245,15 +250,36 @@
     socket = new WebSocket(
       `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws${debugMode ? "?debug=1" : ""}`,
     );
+    socket.onopen = () => debugLog("connected");
     socket.onmessage = (event) => {
       const next = JSON.parse(event.data);
       if (next.error) {
+        debugLog("server error", next.error);
         menuCopy.textContent = next.error;
         menu.hidden = false;
         return;
       }
       const previous = state;
       state = next;
+      debugLog("state", {
+        level: state.level,
+        moves: state.moves,
+        player: state.player,
+        dragon: state.dragon,
+        treasure: state.treasure,
+        status: state.status,
+        dragon_awake: state.dragon_awake,
+        hard_instincts: state.forced_hard,
+        phantom: state.phantom,
+        walls: {
+          horizontal: state.horizontal_walls.length,
+          vertical: state.vertical_walls.length,
+          total: state.horizontal_walls.length + state.vertical_walls.length,
+        },
+      });
+      if (!previous?.dragon_awake && state.dragon_awake)
+        debugLog("dragon awakened");
+      if (state.status !== "playing") debugLog("run ended", state.status);
       setUsernameEditable(false);
       playFeedback(previous, state);
       status.textContent = state.hint;
@@ -269,6 +295,7 @@
       draw();
     };
     socket.onclose = () => {
+      debugLog("disconnected");
       status.hidden = false;
       status.textContent = "Connection lost. Reload to reconnect.";
     };
@@ -303,6 +330,7 @@
   }
   function move(direction) {
     if (state?.status === "playing") {
+      debugLog("move", direction);
       wakeAudio();
       send({ action: "move", direction });
     }
