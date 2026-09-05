@@ -469,6 +469,7 @@ def reveal_wall(state: GameState, pos: Position, delta: Position) -> None:
 def dragon_neighbours(state: GameState, pos: Position):
     """Yield moves allowed by the walls the dragon has encountered so far."""
     known_map = GameState(
+        grid_size=state.grid_size,
         horizontal_walls=state.dragon_discovered_h,
         vertical_walls=state.dragon_discovered_v,
     )

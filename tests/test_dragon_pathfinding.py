@@ -44,6 +44,14 @@ def test_normal_dragon_astar_prefers_the_more_direct_shortest_step(monkeypatch):
     assert state.dragon == (4, 4)
 
 
+def test_normal_dragon_hunts_across_the_full_large_dungeon() -> None:
+    state = game.GameState(grid_size=13, player=(10, 10), dragon=(8, 8))
+
+    game.dragon_step(state)
+
+    assert state.dragon == (9, 9)
+
+
 def test_hard_dragon_uses_real_walls_without_bumping(monkeypatch):
     monkeypatch.setattr(game, "GRID_SIZE", 4)
     state = game.GameState(player=(2, 1), dragon=(0, 1), hard_mode=True)
