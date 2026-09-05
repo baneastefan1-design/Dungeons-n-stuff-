@@ -465,7 +465,7 @@
         tile,
       );
     }
-    if (state.dragon_awake || state.status !== "playing")
+    if (state.debug || state.dragon_awake || state.status !== "playing")
       sprite(
         state.dragon_awake ? "dragon/awake" : "dragon/sleeping",
         left + state.dragon[0] * tile,
