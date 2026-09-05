@@ -16,6 +16,7 @@ dist/
 
 # Local archive of the superseded high-detail artwork
 assets/illustrated_detailed/
+frontend/assets/illustrated_detailed/
 
 # Local Codex workspace guidance
 AGENTS.md

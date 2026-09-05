@@ -1,4 +1,4 @@
-import game
+from backend import game
 
 
 def test_dragon_bump_does_not_consume_its_move(monkeypatch):

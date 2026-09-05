@@ -1,5 +1,5 @@
-import dungeon_improved as app
-import game
+from backend import dungeon_improved as app
+from backend import game
 
 
 def test_phantom_uses_the_opposite_difficulty():

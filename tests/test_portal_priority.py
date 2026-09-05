@@ -1,4 +1,4 @@
-import game
+from backend import game
 
 
 def test_portal_wins_when_dragon_is_already_on_the_portal(monkeypatch):

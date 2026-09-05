@@ -11,26 +11,27 @@ if ! command -v python3 >/dev/null 2>&1; then
     exit 1
 fi
 
-mkdir -p "$INSTALL_DIR/assets" "$BIN_DIR"
-for module in dungeon_improved.py game.py pathfinding.py rendering.py asset_manager.py; do
-    curl -fsSL "$REPOSITORY/$module" -o "$INSTALL_DIR/$module"
+mkdir -p "$INSTALL_DIR/backend" "$INSTALL_DIR/frontend/assets" "$BIN_DIR"
+for module in dungeon_improved.py game.py pathfinding.py rendering.py asset_manager.py __init__.py; do
+    curl -fsSL "$REPOSITORY/backend/$module" -o "$INSTALL_DIR/backend/$module"
 done
-curl -fsSL "$REPOSITORY/assets/start_screen.png" -o "$INSTALL_DIR/assets/start_screen.png"
+curl -fsSL "$REPOSITORY/frontend/assets/start_screen.png" -o "$INSTALL_DIR/frontend/assets/start_screen.png"
 for asset in \
     hero/idle.png hero/walk.png \
     dragon/sleeping.png dragon/awake.png dragon/phantom.png \
     tiles/floor_1.png tiles/floor_2.png \
     tiles/wall_horizontal.png tiles/wall_vertical.png \
     portal.png treasure_open.png scorch.png fog.png; do
-    mkdir -p "$INSTALL_DIR/assets/illustrated/$(dirname "$asset")"
-    curl -fsSL "$REPOSITORY/assets/illustrated/$asset" -o "$INSTALL_DIR/assets/illustrated/$asset"
+    mkdir -p "$INSTALL_DIR/frontend/assets/illustrated/$(dirname "$asset")"
+    curl -fsSL "$REPOSITORY/frontend/assets/illustrated/$asset" -o "$INSTALL_DIR/frontend/assets/illustrated/$asset"
 done
 python3 -m venv "$INSTALL_DIR/.venv"
 "$INSTALL_DIR/.venv/bin/python" -m pip install --quiet --disable-pip-version-check pygame-ce
 
 cat > "$BIN_DIR/dungeon-escape" <<EOF
 #!/usr/bin/env bash
-exec "$INSTALL_DIR/.venv/bin/python" "$INSTALL_DIR/dungeon_improved.py" "\$@"
+cd "$INSTALL_DIR"
+exec "$INSTALL_DIR/.venv/bin/python" -m backend.dungeon_improved "\$@"
 EOF
 chmod +x "$BIN_DIR/dungeon-escape"
 

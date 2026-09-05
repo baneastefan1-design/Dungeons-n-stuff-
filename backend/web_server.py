@@ -13,13 +13,13 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-import game
+from backend import game
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent.parent
 DATABASE = ROOT / "data" / "dungeon_escape.sqlite3"
 app = FastAPI(title="Dungeon Escape")
-app.mount("/assets", StaticFiles(directory=ROOT / "assets"), name="assets")
-app.mount("/static", StaticFiles(directory=ROOT / "web"), name="static")
+app.mount("/assets", StaticFiles(directory=ROOT / "frontend" / "assets"), name="assets")
+app.mount("/static", StaticFiles(directory=ROOT / "frontend"), name="static")
 
 
 def database() -> sqlite3.Connection:
@@ -219,7 +219,7 @@ def serialise(
 @app.get("/")
 async def index() -> FileResponse:
     return FileResponse(
-        ROOT / "web" / "index.html",
+        ROOT / "frontend" / "index.html",
         headers={"Cache-Control": "no-store, max-age=0"},
     )
 
@@ -228,7 +228,7 @@ async def index() -> FileResponse:
 async def debug_index() -> FileResponse:
     """Serve the debug client; debug-only controls are enabled by its URL."""
     return FileResponse(
-        ROOT / "web" / "index.html",
+        ROOT / "frontend" / "index.html",
         headers={"Cache-Control": "no-store, max-age=0"},
     )
 

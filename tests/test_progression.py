@@ -1,4 +1,4 @@
-import game
+from backend import game
 
 
 def test_browser_progression_fortifies_after_the_13_by_13_cap(monkeypatch):

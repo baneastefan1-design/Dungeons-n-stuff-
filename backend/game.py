@@ -14,7 +14,7 @@ import sys
 
 import pygame
 
-from pathfinding import astar_path
+from backend.pathfinding import astar_path
 
 GRID_SIZE = 8
 TILE_SIZE = 56
@@ -36,7 +36,7 @@ AUDIO_RATE = 44_100
 
 def resource_path(relative_path: str) -> Path:
     """Resolve bundled assets in development and PyInstaller builds."""
-    base_path = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
+    base_path = Path(getattr(sys, "_MEIPASS", Path(__file__).parent.parent))
     return base_path / relative_path
 
 

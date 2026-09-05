@@ -1,4 +1,4 @@
-import game
+from backend import game
 
 
 def test_state_grid_size_isolated_from_other_dungeons(monkeypatch):

@@ -1,5 +1,5 @@
-import game
-from rendering import main_menu_button_rect, mode_button_rects, style_button_rects
+from backend import game
+from backend.rendering import main_menu_button_rect, mode_button_rects, style_button_rects
 
 
 def test_mode_buttons_are_separate_and_inside_window():

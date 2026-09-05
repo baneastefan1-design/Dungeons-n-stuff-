@@ -4,7 +4,7 @@ from typing import Any, Callable
 
 import pygame
 
-from asset_manager import ArtStyle, AssetManager
+from backend.asset_manager import ArtStyle, AssetManager
 
 _START_ART: dict[tuple[int, int], pygame.Surface | None] = {}
 
@@ -16,7 +16,7 @@ def start_art(game: Any) -> pygame.Surface | None:
         return _START_ART[size]
     try:
         source = pygame.image.load(
-            game.resource_path("assets/start_screen.png")
+            game.resource_path("frontend/assets/start_screen.png")
         ).convert()
     except (FileNotFoundError, pygame.error):
         _START_ART[size] = None

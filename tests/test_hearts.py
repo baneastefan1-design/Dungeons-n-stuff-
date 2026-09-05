@@ -1,4 +1,4 @@
-import game
+from backend import game
 
 
 def test_dragon_capture_spends_a_heart_and_keeps_the_level() -> None:

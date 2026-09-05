@@ -13,17 +13,17 @@ run = "python -m ensurepip --upgrade && python -m pip install --upgrade pip pyga
 [tasks.run]
 description = "Launch Dungeon Escape"
 depends = ["setup"]
-run = "python dungeon_improved.py"
+run = "python -m backend.dungeon_improved"
 
 [tasks.run-debug]
 description = "Launch the game with the full map visible"
 depends = ["setup"]
-run = "python dungeon_improved.py -d"
+run = "python -m backend.dungeon_improved -d"
 
 [tasks.check]
 description = "Check all game modules for syntax errors"
-run = "python -m py_compile dungeon_improved.py main.py game.py pathfinding.py rendering.py asset_manager.py"
+run = "python -m py_compile backend/dungeon_improved.py backend/game.py backend/pathfinding.py backend/rendering.py backend/asset_manager.py backend/web_server.py"
 
 [tasks.web-build]
 description = "Build and start the illustrated Python-backed Docker edition"
-run = "docker compose up --build"
+run = "docker compose -f infrastructure/compose.yaml up --build"

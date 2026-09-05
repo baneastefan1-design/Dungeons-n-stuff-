@@ -10,9 +10,9 @@ from copy import deepcopy
 
 import pygame
 
-import game
-from asset_manager import ArtStyle, AssetManager
-from rendering import (
+from backend import game
+from backend.asset_manager import ArtStyle, AssetManager
+from backend.rendering import (
     draw_game,
     draw_start_menu,
     main_menu_button_rect,
@@ -25,7 +25,7 @@ def set_window_icon() -> None:
     """Use the bundled Dungeon Escape artwork for development windows."""
     try:
         icon = pygame.image.load(
-            str(game.resource_path("assets/dungeon_escape_icon.png"))
+            str(game.resource_path("frontend/assets/dungeon_escape_icon.png"))
         )
         pygame.display.set_icon(icon)
     except pygame.error:

@@ -52,7 +52,7 @@ class AssetManager:
         key = (style, name, size, fit, trim)
         if key in self._cache:
             return self._cache[key]
-        path = self._resource_path(f"assets/{style.value}/{name}.png")
+        path = self._resource_path(f"frontend/assets/{style.value}/{name}.png")
         try:
             image = pygame.image.load(path).convert_alpha()
         except (FileNotFoundError, pygame.error):
@@ -82,5 +82,7 @@ class AssetManager:
         return [
             name
             for name in ILLUSTRATED_ASSETS
-            if not self._resource_path(f"assets/{style.value}/{name}.png").is_file()
+            if not self._resource_path(
+                f"frontend/assets/{style.value}/{name}.png"
+            ).is_file()
         ]
