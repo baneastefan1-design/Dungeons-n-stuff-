@@ -259,7 +259,7 @@ async def game_socket(websocket: WebSocket) -> None:
                         requested_level, bool
                     ):
                         requested_level = 1
-                    requested_level = max(1, min(10, requested_level))
+                    requested_level = max(1, min(99, requested_level))
                     statistics = game.Statistics(
                         win_streak=requested_level - 1,
                         highest_win_streak=requested_level - 1,
