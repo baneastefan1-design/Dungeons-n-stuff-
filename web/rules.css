@@ -1,5 +1,21 @@
-.rules-dialog { text-align: left; }
-.rules-dialog > .eyebrow,.rules-dialog > h2 { text-align: center; }
-.rules-copy h3 { margin: 18px 0 5px; color: #f6bf4a; font-size: 1rem; }
-.rules-copy p { margin: 0; color: #d5deee; line-height: 1.45; }
-.rules-dialog .quiet-button { display: block; margin: 22px auto 0; }
+.rules-dialog {
+  text-align: left;
+}
+.rules-dialog > .eyebrow,
+.rules-dialog > h2 {
+  text-align: center;
+}
+.rules-copy h3 {
+  margin: 18px 0 5px;
+  color: #f6bf4a;
+  font-size: 1rem;
+}
+.rules-copy p {
+  margin: 0;
+  color: #d5deee;
+  line-height: 1.45;
+}
+.rules-dialog .quiet-button {
+  display: block;
+  margin: 22px auto 0;
+}

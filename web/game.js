@@ -64,7 +64,9 @@
   }
   usernameInput.value = localStorage.getItem("dungeon-escape-username") || "";
   // Menus are viewport-level layers, never clipped by the square game board.
-  [menu, rules, leaderboard].forEach((overlay) => document.body.append(overlay));
+  [menu, rules, leaderboard].forEach((overlay) =>
+    document.body.append(overlay),
+  );
   function setUsernameEditable(editable) {
     usernameInput.readOnly = !editable;
     usernameInput.setAttribute("aria-readonly", String(!editable));
