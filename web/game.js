@@ -7,7 +7,12 @@
   const load = name => new Promise(resolve => { const img = new Image(); img.src = `/assets/illustrated/${name}.png`; img.onload = () => { assets[name] = img; resolve(); }; img.onerror = resolve; });
   Promise.all(names.map(load)).then(resize);
   function send(value) { if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(value)); }
-  function connect() { if (socket?.readyState === WebSocket.OPEN) return; socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`); socket.onmessage = event => { state = JSON.parse(event.data); status.textContent = state.message; draw(); }; socket.onclose = () => { status.textContent = 'Connection lost. Reload to reconnect.'; }; }
+  function resultCopy(kind) {
+    if (kind === 'won') return ['You escaped with the treasure!', `A complete escape in ${state.moves} moves. Choose a difficulty for a new dungeon.`];
+    if (kind === 'escaped') return ['You escaped safely.', 'The dragon woke, but you made it back to the portal. Choose a difficulty for a new dungeon.'];
+    return ['The dragon got you.', 'The dungeon is different every time. Choose a difficulty and try again.'];
+  }
+  function connect() { if (socket?.readyState === WebSocket.OPEN) return; socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`); socket.onmessage = event => { state = JSON.parse(event.data); status.textContent = state.message; if (state.status !== 'playing') { const [title, copy] = resultCopy(state.status); menuTitle.textContent = title; menuCopy.textContent = copy; menu.hidden = false; } draw(); }; socket.onclose = () => { status.textContent = 'Connection lost. Reload to reconnect.'; }; }
   function start(difficulty) { connect(); const begin = () => send({action:'start', difficulty}); if (socket.readyState === WebSocket.OPEN) begin(); else socket.addEventListener('open', begin, {once:true}); menu.hidden = true; }
   function move(direction) { if (state?.status === 'playing') send({action:'move', direction}); }
   function has(items, x, y) { return items.some(item => item[0] === x && item[1] === y); }
@@ -26,7 +31,7 @@
     const thick=Math.max(5,tile*.18); for(const [x,y] of state.horizontal_walls) if(assets['tiles/wall_horizontal']) ctx.drawImage(assets['tiles/wall_horizontal'],left+x*tile,top+(y+1)*tile-thick/2,tile,thick); for(const [x,y] of state.vertical_walls) if(assets['tiles/wall_vertical']) ctx.drawImage(assets['tiles/wall_vertical'],left+(x+1)*tile-thick/2,top+y*tile,thick,tile);
     sprite(state.moves%2?'hero/walk':'hero/idle',left+state.player[0]*tile,top+state.player[1]*tile,tile);
   }
-  document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click',()=>start(button.dataset.mode==='hard'?'hard':'normal')));
+  document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click',()=>start(button.dataset.mode)));
   document.querySelectorAll('[data-direction]').forEach(button => button.addEventListener('click',()=>move(button.dataset.direction)));
   document.querySelector('#new-game').addEventListener('click',()=>{menuTitle.textContent='Dungeon Escape';menuCopy.textContent='Find the treasure, evade the sleeping dragon, and return to the portal.';menu.hidden=false;});
   addEventListener('keydown',event=>{const direction=keys[event.key];if(direction){event.preventDefault();move(direction);}}); canvas.addEventListener('pointerdown',event=>{swipe=[event.clientX,event.clientY];}); canvas.addEventListener('pointerup',event=>{if(!swipe)return;const dx=event.clientX-swipe[0],dy=event.clientY-swipe[1];swipe=null;if(Math.max(Math.abs(dx),Math.abs(dy))>25)move(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));}); new ResizeObserver(resize).observe(canvas);
