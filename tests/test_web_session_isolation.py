@@ -20,5 +20,5 @@ def test_browser_dungeon_settings_do_not_mutate_desktop_globals(monkeypatch):
 
     assert small == (8, 12, 0)
     assert large[0] == 13
-    assert large[2] == 11
+    assert large[2] == 8
     assert (game.GRID_SIZE, game.WALL_COUNT, game.EXTRA_WALLS) == (8, 12, 0)

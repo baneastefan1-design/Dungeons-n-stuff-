@@ -12,6 +12,8 @@
     usernameInput = document.querySelector("#username"),
     debugLevelField = document.querySelector("#debug-level-field"),
     debugLevelInput = document.querySelector("#debug-level"),
+    debugVisibilityField = document.querySelector("#debug-visibility-field"),
+    debugNormalVisibility = document.querySelector("#debug-normal-visibility"),
     rules = document.querySelector("#rules"),
     rulesButton = document.querySelector("#rules-toggle"),
     leaderboard = document.querySelector("#leaderboard"),
@@ -76,6 +78,7 @@
   setUsernameEditable(!usernameInput.value);
   if (debugMode) {
     debugLevelField.hidden = false;
+    debugVisibilityField.hidden = false;
     document.querySelector(".eyebrow").textContent =
       "DUNGEON ESCAPE · DEBUG MODE";
   }
@@ -251,7 +254,7 @@
       ? "Dungeon Escape debug"
       : "Dungeon Escape";
     menuCopy.textContent = debugMode
-      ? "Choose a level, reveal the entire dungeon, and compare the opposite dragon as a ghost."
+      ? "Choose a level and test with normal fog, or uncheck normal visibility to reveal the dungeon and compare the opposite dragon."
       : "Find the treasure, evade the sleeping dragon, and return to the portal.";
     menu.hidden = false;
     nextButton.textContent = "Main menu";
@@ -337,6 +340,7 @@
         username,
         client_id: clientId,
         level: debugMode ? Number(debugLevelInput.value) : undefined,
+        normal_visibility: debugMode && debugNormalVisibility.checked,
       });
     if (socket.readyState === WebSocket.OPEN) begin();
     else socket.addEventListener("open", begin, { once: true });
@@ -415,6 +419,15 @@
       ctx.fillStyle = "#ffd34d";
       ctx.font = `700 ${Math.max(13, tile * 0.24)}px system-ui`;
       ctx.fillText("⚠ The air feels warm nearby…", left, top - 10);
+    }
+    if (state.treasure_wake_moves_remaining !== null) {
+      ctx.fillStyle = "#ff9d42";
+      ctx.font = `700 ${Math.max(13, tile * 0.24)}px system-ui`;
+      ctx.fillText(
+        `⚠ Dragon wakes in ${state.treasure_wake_moves_remaining} move${state.treasure_wake_moves_remaining === 1 ? "" : "s"}.`,
+        left,
+        top - 10,
+      );
     }
     for (let y = 0; y < state.grid_size; y++)
       for (let x = 0; x < state.grid_size; x++)

@@ -168,7 +168,10 @@ def serialise(
         hint = "ESCAPED · You reached the portal safely."
     elif state.dragon_awake:
         hint = "The dragon is hunting you!"
-    elif distance <= game.WAKE_DISTANCE + 1:
+    elif state.treasure_wake_moves_remaining is not None:
+        moves = state.treasure_wake_moves_remaining
+        hint = f"Dragon wakes in {moves} move{'s' if moves != 1 else ''}."
+    elif distance <= state.wake_distance + 1:
         hint = "The air feels warm nearby…"
     else:
         hint = "The dungeon is quiet."
@@ -203,6 +206,7 @@ def serialise(
         "life_spent": state.life_spent,
         "hearts": statistics.hearts,
         "dragon_awake": state.dragon_awake,
+        "treasure_wake_moves_remaining": state.treasure_wake_moves_remaining,
         "hard_mode": state.hard_mode,
         "status": state.status,
         "message": state.flash,
@@ -210,7 +214,7 @@ def serialise(
         "debug": debug,
         "phantom": (
             {"position": position(phantom.dragon), "hard_mode": phantom.hard_mode}
-            if phantom is not None and phantom.dragon_awake
+            if debug and phantom is not None and phantom.dragon_awake
             else None
         ),
     }
@@ -249,6 +253,7 @@ async def leaderboard() -> JSONResponse:
 async def game_socket(websocket: WebSocket) -> None:
     await websocket.accept()
     debug_mode = websocket.query_params.get("debug") == "1"
+    normal_visibility = False
     state: game.GameState | None = None
     phantom: game.GameState | None = None
     statistics = game.Statistics()
@@ -272,6 +277,7 @@ async def game_socket(websocket: WebSocket) -> None:
                     )
                     continue
                 if debug_mode:
+                    normal_visibility = bool(message.get("normal_visibility"))
                     requested_level = message.get("level", 1)
                     if not isinstance(requested_level, int) or isinstance(
                         requested_level, bool
@@ -302,9 +308,9 @@ async def game_socket(websocket: WebSocket) -> None:
                     wall_count=wall_count,
                     extra_walls=extra_walls,
                     hearts=statistics.hearts,
-                    force_heart=debug_mode,
+                    force_heart=debug_mode and not normal_visibility,
                 )
-                phantom = make_phantom(state) if debug_mode else None
+                phantom = make_phantom(state) if debug_mode and not normal_visibility else None
             elif action == "move" and state is not None:
                 delta = moves.get(message.get("direction"))
                 if delta is not None:
@@ -329,12 +335,17 @@ async def game_socket(websocket: WebSocket) -> None:
                     wall_count=wall_count,
                     extra_walls=extra_walls,
                     hearts=statistics.hearts,
-                    force_heart=debug_mode,
+                    force_heart=debug_mode and not normal_visibility,
                 )
-                phantom = make_phantom(state) if debug_mode else None
+                phantom = make_phantom(state) if debug_mode and not normal_visibility else None
             if state is not None:
                 await websocket.send_json(
-                    serialise(state, statistics, debug=debug_mode, phantom=phantom)
+                    serialise(
+                        state,
+                        statistics,
+                        debug=debug_mode and not normal_visibility,
+                        phantom=phantom,
+                    )
                 )
     except WebSocketDisconnect:
         return

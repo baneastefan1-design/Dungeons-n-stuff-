@@ -25,10 +25,15 @@ HEIGHT = GRID_SIZE * TILE_SIZE + HUD_HEIGHT + MENU_HEIGHT
 FPS = 60
 WALL_COUNT = 12
 EXTRA_WALLS = 0
-MAX_GRID_SIZE = 16
+MAX_GRID_SIZE = 13
 MAX_WEB_LEVEL = 54
 MIN_TILE_SIZE = 42
 WAKE_DISTANCE = 3
+HEART_WAKE_DISTANCE = 3
+TREASURE_WAKE_DISTANCE = 2
+TREASURE_WAKE_MIN_MOVES = 1
+TREASURE_WAKE_MAX_MOVES = 12
+DRAGON_THREAT_DISTANCE = 4
 SWIPE_THRESHOLD = 28
 VISION_RADIUS = 2
 AUDIO_RATE = 44_100
@@ -120,6 +125,9 @@ class GameState:
     heart_banked: bool = False
     life_spent: bool = False
     dragon_awake: bool = False
+    wake_distance: int = WAKE_DISTANCE
+    treasure_wake_enabled: bool = False
+    treasure_wake_moves_remaining: int | None = None
     status: str = "playing"
     flash: str = "Find the treasure and return to the portal."
     flash_color: tuple[int, int, int] = MUTED
@@ -234,13 +242,7 @@ def configure_difficulty(
     HEIGHT = GRID_SIZE * TILE_SIZE + HUD_HEIGHT + MENU_HEIGHT
     # Each extra row adds walls while preserving the original light density.
     WALL_COUNT = 12 + (GRID_SIZE - 8) * 3
-    # Web dungeons stop growing at a readable 13×13. Levels 7–9 ramp up by
-    # three barriers per level; every later level adds one more barrier set.
-    if max_grid_size is None:
-        EXTRA_WALLS = 0
-    else:
-        level = min(MAX_WEB_LEVEL, statistics.win_streak + 1)
-        EXTRA_WALLS = 3 * max(0, min(level, 9) - 6) + max(0, level - 9)
+    EXTRA_WALLS = fortification_walls(statistics.win_streak + 1)
 
 
 def browser_difficulty(statistics: Statistics) -> tuple[int, int, int]:
@@ -248,11 +250,17 @@ def browser_difficulty(statistics: Statistics) -> tuple[int, int, int]:
     level = statistics.win_streak + 1
     grid_size = min(13, 8 + statistics.win_streak)
     wall_count = 12 + (grid_size - 8) * 3
-    fortified_level = min(MAX_WEB_LEVEL, level)
-    extra_walls = 3 * max(0, min(fortified_level, 9) - 6) + max(
-        0, fortified_level - 9
-    )
+    extra_walls = fortification_walls(level)
     return grid_size, wall_count, extra_walls
+
+
+def fortification_walls(level: int) -> int:
+    """Return the capped barrier count for the shared late-game curve."""
+    if level <= 6:
+        return 0
+    if level <= 9:
+        return 2 * (level - 6)
+    return min(10, level - 3)
 
 
 def make_sound(
@@ -377,6 +385,7 @@ def make_game(
     extra_walls: int | None = None,
     hearts: int = 3,
     force_heart: bool = False,
+    treasure_wake_enabled: bool = True,
 ) -> GameState:
     """Generate a map whose treasure is reachable from the entrance."""
     while True:
@@ -389,6 +398,10 @@ def make_game(
             extra_walls=active_extra_walls,
             hard_mode=hard_mode,
             level=level,
+            wake_distance=(
+                TREASURE_WAKE_DISTANCE if treasure_wake_enabled else WAKE_DISTANCE
+            ),
+            treasure_wake_enabled=treasure_wake_enabled,
         )
         state.visited.add(state.start)
         state.horizontal_walls = {
@@ -446,12 +459,44 @@ def make_game(
                     for y in range(state.grid_size)
                     if (x, y) not in {state.start, state.treasure, state.dragon}
                     and max(abs(x - state.dragon[0]), abs(y - state.dragon[1]))
-                    == WAKE_DISTANCE
+                    == HEART_WAKE_DISTANCE
                     and reachable(state, state.start, (x, y))
                 ]
                 if heart_candidates:
                     state.heart = random.choice(heart_candidates)
             return state
+
+
+def path_distance(
+    state: GameState, start: Position, goal: Position, *, diagonals: bool = False
+) -> int:
+    """Return the number of legal steps in a shortest route through the dungeon."""
+    return len(
+        astar_path(
+            start,
+            goal,
+            lambda pos: neighbours(state, pos, diagonals=diagonals),
+            state.grid_size,
+        )
+    )
+
+
+def treasure_wake_moves(state: GameState) -> int | None:
+    """Set a fair treasure timer from the real escape route and dragon threat."""
+    if state.level <= 1:
+        return None
+    player_to_portal = path_distance(state, state.player, state.start)
+    dragon_to_player = path_distance(
+        state, state.dragon, state.player, diagonals=True
+    )
+    dragon_to_portal = path_distance(
+        state, state.dragon, state.start, diagonals=True
+    )
+    nearby_threat = max(
+        0, DRAGON_THREAT_DISTANCE - min(dragon_to_player, dragon_to_portal)
+    )
+    calculated_moves = math.ceil(player_to_portal / 2) + nearby_threat
+    return min(TREASURE_WAKE_MAX_MOVES, max(TREASURE_WAKE_MIN_MOVES, calculated_moves))
 
 
 def reveal_wall(state: GameState, pos: Position, delta: Position) -> None:
@@ -572,8 +617,10 @@ def attempt_move(
     state.visited.add(state.player)
     state.moves += 1
     play_sound("step")
+    claimed_treasure = False
     if state.player == state.treasure and not state.has_treasure:
         state.has_treasure = True
+        claimed_treasure = True
         play_sound("treasure")
         state.flash, state.flash_color = (
             "Treasure claimed—get back to the portal!",
@@ -581,11 +628,17 @@ def attempt_move(
         )
         state.flash_until = pygame.time.get_ticks() + 1600
         state.treasure_open_until = pygame.time.get_ticks() + 700
+        wake_moves = treasure_wake_moves(state)
+        if state.treasure_wake_enabled and not state.dragon_awake and wake_moves:
+            state.treasure_wake_moves_remaining = wake_moves
     if state.player == state.heart and not state.has_heart:
         state.has_heart = True
         play_sound("treasure")
         state.flash, state.flash_color = "Heart claimed—bring it back to the portal!", RED
         state.flash_until = pygame.time.get_ticks() + 1600
+        if not state.dragon_awake:
+            wake_dragon(state)
+            return
     if state.player == state.start:
         if state.has_treasure:
             if state.has_heart and statistics is not None:
@@ -609,17 +662,32 @@ def attempt_move(
     distance = max(
         abs(state.player[0] - state.dragon[0]), abs(state.player[1] - state.dragon[1])
     )
-    if not state.dragon_awake and distance <= WAKE_DISTANCE:
-        state.dragon_awake = True
-        state.scorched.add(state.dragon)
-        play_sound("growl")
-        state.flash, state.flash_color = "THE DRAGON AWAKENS!", RED
-        state.flash_until = pygame.time.get_ticks() + 1300
+    if (
+        not state.dragon_awake
+        and state.treasure_wake_moves_remaining is not None
+        and not claimed_treasure
+    ):
+        state.treasure_wake_moves_remaining -= 1
+        if state.treasure_wake_moves_remaining == 0:
+            wake_dragon(state)
+            return  # A fair warning turn.
+    if not state.dragon_awake and distance <= state.wake_distance:
+        wake_dragon(state)
         return  # A fair warning turn.
     if state.dragon_awake:
         dragon_step(state)
         if state.dragon == state.player:
             eat_player(state, statistics, persist_statistics=persist_statistics)
+
+
+def wake_dragon(state: GameState) -> None:
+    """Wake the dragon and give the player one warning turn."""
+    state.dragon_awake = True
+    state.treasure_wake_moves_remaining = None
+    state.scorched.add(state.dragon)
+    play_sound("growl")
+    state.flash, state.flash_color = "THE DRAGON AWAKENS!", RED
+    state.flash_until = pygame.time.get_ticks() + 1300
 
 
 def cell_center(pos: Position) -> Position:

@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="/static/desktop-controls.css?v=20260905-2" />
     <link rel="stylesheet" href="/static/two-difficulties.css?v=20260905-2" />
     <link rel="stylesheet" href="/static/sound-controls.css?v=20260905-2" />
-    <link rel="stylesheet" href="/static/player-profile.css?v=20260905-2" />
+    <link rel="stylesheet" href="/static/player-profile.css?v=20260906-3" />
     <link rel="stylesheet" href="/static/rules.css?v=20260905-1" />
     <title>Dungeon Escape</title>
   </head>
@@ -85,6 +85,10 @@
                 value="1"
                 inputmode="numeric"
               />
+            </label>
+            <label id="debug-visibility-field" class="debug-option" hidden>
+              <input id="debug-normal-visibility" type="checkbox" checked />
+              Play with normal fog of war and hidden walls
             </label>
             <div class="difficulty-row">
               <button data-mode="normal" type="button">
@@ -226,6 +230,6 @@
         Choose a difficulty to begin.
       </p>
     </main>
-    <script src="/static/game.js?v=20260906-4"></script>
+    <script src="/static/game.js?v=20260906-6"></script>
   </body>
 </html>

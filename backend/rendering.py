@@ -192,7 +192,7 @@ def draw_classic_game(
 ) -> None:
     GRID_SIZE, TILE_SIZE = game.GRID_SIZE, game.TILE_SIZE
     HUD_HEIGHT, WIDTH, HEIGHT = game.HUD_HEIGHT, game.WIDTH, game.HEIGHT
-    VISION_RADIUS, WAKE_DISTANCE = game.VISION_RADIUS, game.WAKE_DISTANCE
+    VISION_RADIUS = game.VISION_RADIUS
     BG, FLOOR_A, FLOOR_B, GRID, HUD_BG = (
         game.BG,
         game.FLOOR_A,
@@ -545,6 +545,10 @@ def draw_classic_game(
             detail, color = state.flash, state.flash_color
         elif state.dragon_awake:
             detail, color = "The dragon is hunting you!", ORANGE
+        elif state.treasure_wake_moves_remaining is not None:
+            moves = state.treasure_wake_moves_remaining
+            detail = f"Dragon wakes in {moves} move{'s' if moves != 1 else ''}."
+            color = ORANGE
         elif state.has_treasure:
             detail, color = "Return to the blue portal.", GOLD
         else:
@@ -554,10 +558,10 @@ def draw_classic_game(
             )
             detail = (
                 "The air feels warm nearby…"
-                if distance <= WAKE_DISTANCE + 1
+                if distance <= state.wake_distance + 1
                 else "The dungeon is quiet."
             )
-            color = ORANGE if distance <= WAKE_DISTANCE + 1 else MUTED
+            color = ORANGE if distance <= state.wake_distance + 1 else MUTED
     screen.blit(title_font.render(headline, True, WHITE), (14, 11))
     stats_text = (
         f"W {statistics.wins}  D {statistics.dragon_wins}  E {statistics.escapes}"

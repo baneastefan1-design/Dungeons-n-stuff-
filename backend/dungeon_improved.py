@@ -95,11 +95,17 @@ async def main(debug: bool = False) -> None:
         nonlocal screen, hard_mode
         hard_mode = selected_hard_mode
         game.configure_difficulty(statistics)
+        active_hard_mode = hard_mode or statistics.win_streak >= 9
         screen = pygame.display.set_mode((game.WIDTH, game.HEIGHT))
         pygame.display.set_caption(
-            "Dungeon Escape — Hard" if hard_mode else "Dungeon Escape"
+            "Dungeon Escape — Hard" if active_hard_mode else "Dungeon Escape"
         )
-        return game.make_game(hard_mode=hard_mode, hearts=statistics.hearts)
+        return game.make_game(
+            hard_mode=active_hard_mode,
+            level=statistics.win_streak + 1,
+            hearts=statistics.hearts,
+            treasure_wake_enabled=True,
+        )
 
     def move_player(delta: game.Position) -> None:
         if state is None:

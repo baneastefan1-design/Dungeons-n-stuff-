@@ -29,6 +29,24 @@
   color: #c7d0df;
   cursor: default;
 }
+.debug-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 360px;
+  margin: -8px auto 18px;
+  color: #dbe5f6;
+  font-weight: 700;
+  text-align: left;
+}
+.debug-option[hidden] {
+  display: none;
+}
+.debug-option input {
+  width: 18px;
+  height: 18px;
+  accent-color: #f6bf4a;
+}
 .ranking-table-wrap {
   max-height: min(46dvh, 360px);
   overflow: auto;
