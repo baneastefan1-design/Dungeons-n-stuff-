@@ -1,0 +1,12 @@
+services:
+  dungeon-escape:
+    image: dungeon-escape:latest
+    container_name: dungeon-escape
+    restart: unless-stopped
+    ports:
+      - "${DUNGEON_ESCAPE_PORT:-8082}:8080"
+    volumes:
+      - dungeon_escape_data:/app/data
+
+volumes:
+  dungeon_escape_data:
