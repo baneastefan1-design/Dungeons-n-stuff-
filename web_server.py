@@ -26,7 +26,7 @@ def walls(values: set[game.Wall]) -> list[list[int]]:
     return [list(value) for value in values]
 
 
-def serialise(state: game.GameState) -> dict[str, Any]:
+def serialise(state: game.GameState, statistics: game.Statistics) -> dict[str, Any]:
     """Return only rendering data; all decisions remain in game.py."""
     distance = max(abs(state.player[0] - state.dragon[0]), abs(state.player[1] - state.dragon[1]))
     if state.status == "eaten":
@@ -43,6 +43,7 @@ def serialise(state: game.GameState) -> dict[str, Any]:
         hint = "The dungeon is quiet."
     return {
         "grid_size": game.GRID_SIZE,
+        "streak": statistics.win_streak,
         "player": position(state.player),
         "start": position(state.start),
         "treasure": position(state.treasure),
@@ -70,20 +71,23 @@ async def index() -> FileResponse:
 async def game_socket(websocket: WebSocket) -> None:
     await websocket.accept()
     state: game.GameState | None = None
+    statistics = game.Statistics()
     moves = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
     try:
         while True:
             message = await websocket.receive_json()
             action = message.get("action")
             if action == "start":
+                game.configure_difficulty(statistics)
                 state = game.make_game(hard_mode=message.get("difficulty") == "hard")
             elif action == "move" and state is not None:
                 delta = moves.get(message.get("direction"))
                 if delta is not None:
-                    game.attempt_move(state, delta)
+                    game.attempt_move(state, delta, statistics)
             elif action == "restart" and state is not None:
+                game.configure_difficulty(statistics)
                 state = game.make_game(hard_mode=state.hard_mode)
             if state is not None:
-                await websocket.send_json(serialise(state))
+                await websocket.send_json(serialise(state, statistics))
     except WebSocketDisconnect:
         return

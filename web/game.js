@@ -21,7 +21,7 @@
   function draw() {
     const width = canvas.clientWidth, height = canvas.clientHeight; ctx.clearRect(0,0,width,height); ctx.fillStyle = '#111827'; ctx.fillRect(0,0,width,height); if (!state) return;
     const pad = Math.min(width,height)*.025, hud = Math.max(38,height*.07), tile = Math.min((width-pad*2)/state.grid_size,(height-pad*2-hud)/state.grid_size), board = tile*state.grid_size, left=(width-board)/2, top=pad+hud;
-    ctx.fillStyle='#f6f4e8'; ctx.font=`700 ${Math.max(14,tile*.31)}px system-ui`; ctx.textAlign='left'; ctx.fillText(`Moves ${state.moves}   ${state.hard_mode ? 'Hard' : 'Normal'}${state.has_treasure ? '   Treasure ✓' : ''}`,left,top-14);
+    ctx.fillStyle='#f6f4e8'; ctx.font=`700 ${Math.max(14,tile*.31)}px system-ui`; ctx.textAlign='left'; ctx.fillText(`Moves ${state.moves}   ${state.hard_mode ? 'Hard' : 'Normal'}   Dungeon ${state.grid_size}×${state.grid_size}${state.streak ? `   Streak ${state.streak}` : ''}${state.has_treasure ? '   Treasure ✓' : ''}`,left,top-14);
     if (state.hint === 'The air feels warm nearby…') { ctx.fillStyle='#ffd34d'; ctx.textAlign='right'; ctx.fillText('⚠ The air feels warm nearby…',left+board,top-14); }
     for(let y=0;y<state.grid_size;y++) for(let x=0;x<state.grid_size;x++) sprite(`tiles/floor_${(x+y)%2+1}`,left+x*tile,top+y*tile,tile);
     for(const [x,y] of state.scorched) sprite('scorch',left+x*tile,top+y*tile,tile);

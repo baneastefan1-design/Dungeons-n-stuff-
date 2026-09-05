@@ -171,7 +171,12 @@ def configure_difficulty(statistics: Statistics) -> None:
     global GRID_SIZE, TILE_SIZE, WALL_COUNT, WIDTH, HEIGHT
     # Use the desktop resolution, not the active game window. The latter can
     # report the previous, smaller window and incorrectly shrink a new run.
-    desktop_sizes = pygame.display.get_desktop_sizes()
+    try:
+        desktop_sizes = pygame.display.get_desktop_sizes()
+    except pygame.error:
+        # The browser server has no SDL display. Use a conservative desktop
+        # viewport so its streak scaling follows the same grid-size rule.
+        desktop_sizes = [(1_280, 800)]
     if desktop_sizes:
         desktop_width, desktop_height = desktop_sizes[0]
     else:
