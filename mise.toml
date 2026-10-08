@@ -24,6 +24,11 @@ run = "python -m backend.dungeon_improved -d"
 description = "Check all game modules for syntax errors"
 run = "python -m py_compile backend/dungeon_improved.py backend/game.py backend/pathfinding.py backend/rendering.py backend/asset_manager.py backend/web_server.py"
 
+[tasks.test]
+description = "Run the pytest suite"
+depends = ["setup"]
+run = "python -m pip install pytest && python -m pytest"
+
 [tasks.web-build]
 description = "Build and start the illustrated Python-backed Docker edition"
 run = "docker compose -f infrastructure/compose.yaml up --build"

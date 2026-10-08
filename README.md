@@ -103,6 +103,15 @@ python3 -m venv .venv
 - Return to the portal with the treasure to win.
 - Once the dragon wakes, you may return to the portal without the treasure for a safe retreat.
 
+## Hearts (Browser Edition)
+
+- Browser players begin with three saved hearts, stored per explorer name in the server's SQLite database.
+- A dragon capture spends one heart and resolves as a safe escape. A capture with no hearts is a true defeat: the run resets to Level 1 and all three hearts are restored.
+- When you have fewer than three hearts, a new dungeon has a 10% chance to hide a heart on the edge of the dragon's wake radius (three tiles from the dragon). It is always reachable from the portal.
+- Picking up a heart wakes the dragon. The heart cannot protect that same run; carry it back to the portal to bank it for the next dungeon.
+- Entering the portal always resolves before a dragon on the same tile can capture you.
+- Each browser connection has its own independent game, with difficulty chosen per session.
+
 ## Dungeon Rules
 
 - Walls are hidden until you try to walk into them. The treasure always has a reachable route from the portal.
@@ -117,6 +126,9 @@ python3 -m venv .venv
 
 ## Development Check
 
+With mise, `mise run check` runs the syntax check and `mise run test` runs the pytest suite. Without mise:
+
 ```bash
+.venv/bin/python -m pytest
 .venv/bin/python -m py_compile backend/dungeon_improved.py backend/game.py backend/pathfinding.py backend/rendering.py backend/asset_manager.py backend/web_server.py
 ```
